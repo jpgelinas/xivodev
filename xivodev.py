@@ -1,10 +1,12 @@
 #!/usr/bin/env python2
 
 import argparse
+import os
+import subprocess
 
 DEV_HOST = "root@%s"
 SOURCE_DIRECTORY = "/home/jp/src/xivo"
-#SOURCE_DIRECTORY_FILES = "$SOURCE_DIRECTORY/*"
+SOURCE_DIRECTORY_FILES = "%s/*" % SOURCE_DIRECTORY
 UPDATE_TAGS = False
 PULL = False
 RSYNC = False
@@ -12,7 +14,7 @@ LIST_BRANCHES = False
 VERBOSE = False
 
 REPOS = {
-    'xivo-agentd': ('xivo_agent', '/usr/lib/pymodules/python2.6/xivo_agent'),
+    'xivo-agent': ('xivo_agent', '/usr/lib/pymodules/python2.6/xivo_agent'),
     'xivo-agid': ('xivo_agid', '/usr/lib/pymodules/python2.6/xivo_agid'),
     'xivo-call-logs': ('xivo_call_logs', '/usr/lib/pymodules/python2.6/xivo_call_logs'),
     'xivo-config': ('dialplan/asterisk', '/usr/share/xivo-config/dialplan/'),
@@ -30,32 +32,56 @@ REPOS = {
 
 base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
 xivo_src = '/home/jp/src/xivo'
-#env.host_ip = '192.168.32.'
+
+
+def list_repositories_with_branch():
+    repos = [name for name in os.listdir(SOURCE_DIRECTORY) if (os.path.isdir(os.path.join(SOURCE_DIRECTORY, name)) and name in REPOS)]
+    for name in repos:
+        branch = _get_current_branch(name)
+        print("%s : %s" % (name, branch))
 
 
 def sync_all():
     for name in REPOS.iterkeys():
         sync(name)
 
+
 def sync(name):
-    #$base_command $SOURCE_DIRECTORY/${sync_sources[$user_option]} $DEV_HOST:${sync_destinations[$user_option]}
-    #final_command = "base_command $SOURCE_DIRECTORY/${sync_sources[$user_option]} $DEV_HOST:${sync_destinations[$user_option]}"
     cmd = "%s %s %s" % (base_command, local_path(name), remote_uri(name))
-    #cmd = 'mount %s:%s %s' % (env.host_ip, local_path(name), remote_path(name))
-    #run(cmd)
     print(cmd)
 
 
 def local_path(name):
-    #repo = REPOS[name]
-    return '%s/%s' % (SOURCE_DIRECTORY, REPOS[name][0])
-    #return '%s/%s/%s/%s' % (env.root, name, name, repo[0])
+    return '%s/%s/%s/%s' % (SOURCE_DIRECTORY, name, name, REPOS[name][0])
 
 
 def remote_uri(name):
-    #repo = REPOS[name]
     return '%s:%s' % (DEV_HOST, REPOS[name][1])
-    #return repo[1]
+
+
+def update_tags():
+    subprocess.call(['ctags', '-R', '-f', '~/.mytags', SOURCE_DIRECTORY_FILES])
+
+
+# Broken : no colors
+def print_mantra():
+    print "\e[00;31mReady\e[00m, \e[1;33mSet\e[00m, \e[0;32mC0DE!\e[00m"
+
+
+def _get_current_branch(repo):
+    cmd = ['git rev-parse',  '--abbrev-ref',  'HEAD']
+    return _exec_git_command(cmd, repo)
+
+
+def _exec_git_command(cmd, repo):
+    repo_dir = local_path(repo)
+    #print repo_dir
+    #subprocess.['pushd', repo_dir])
+    #result = subprocess.call(cmd)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
+    result = process.communicate()
+    #subprocess.call(['popd'])
+    return result
 
 
 if __name__ == "__main__":
@@ -65,4 +91,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     DEV_HOST = DEV_HOST % (args.xivo_host)
 
-    sync_all()
+    #sync_all()
+    list_repositories_with_branch()
