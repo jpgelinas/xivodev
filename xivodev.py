@@ -69,19 +69,20 @@ def print_mantra():
 
 
 def _get_current_branch(repo):
-    cmd = ['git rev-parse',  '--abbrev-ref',  'HEAD']
+    cmd = ['git', 'rev-parse',  '--abbrev-ref',  'HEAD']
     return _exec_git_command(cmd, repo)
 
 
 def _exec_git_command(cmd, repo):
     repo_dir = local_path(repo)
     #print repo_dir
+    #print cmd
     #subprocess.['pushd', repo_dir])
     #result = subprocess.call(cmd)
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
     result = process.communicate()
     #subprocess.call(['popd'])
-    return result
+    return result[0]
 
 
 if __name__ == "__main__":
