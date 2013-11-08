@@ -1,4 +1,19 @@
 #!/usr/bin/env python2
+# -*- coding: UTF-8 -*-
+
+"""
+usage: $0 options
+
+This script git pulls all repos in directory with a few bells and whistles.
+
+OPTIONS:
+   +h      Show this message
+   -r      Rsync given xivo vm
+   -p      git pull repositories
+   -t      Update ctags
+   +l      List all repositories and their current branch
+   -v      Verbose
+"""
 
 import argparse
 import os
@@ -70,7 +85,7 @@ def print_mantra():
 
 def _get_current_branch(repo):
     cmd = ['git', 'rev-parse',  '--abbrev-ref',  'HEAD']
-    return _exec_git_command(cmd, repo)
+    return _exec_git_command(cmd, repo).strip()
 
 
 def _exec_git_command(cmd, repo):
@@ -85,12 +100,37 @@ def _exec_git_command(cmd, repo):
     return result[0]
 
 
+def update_ctags():
+    #result=`ctags -R -f ~/.mytags $SOURCE_DIRECTORY_FILES`
+    ctag_file = "~/.mytags"
+    cmd = "ctags -R -f %s %s" % (ctag_file, SOURCE_DIRECTORY_FILES)
+    print cmd
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    result = process.communicate()
+    print("Updated CTAGS %s : %s" % (ctag_file, result))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('XiVO dev toolkit')
-    parser.add_argument('xivo_host', help='IP or domain of target XiVO installation')
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        action="store_true")
+    parser.add_argument("-t", "--tags", help="update CTAGS",
+                        action="store_true")
+    parser.add_argument("-p", "--pull", help="git pull repositories",
+                        action="store_true")
+    parser.add_argument("-l", "--list", help="list all repositories and their current branch",
+                        action="store_true")
+    parser.add_argument("-r", "--rsync", help='sync repos on given IP or domain')
 
     args = parser.parse_args()
-    DEV_HOST = DEV_HOST % (args.xivo_host)
 
-    #sync_all()
-    list_repositories_with_branch()
+    if args.rsync:
+        #DEV_HOST = DEV_HOST % (args.host)
+        #sync_all()
+        pass
+
+    if args.list:
+        list_repositories_with_branch()
+
+    if args.tags:
+        update_ctags()
