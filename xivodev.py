@@ -16,6 +16,7 @@ OPTIONS:
 """
 
 import argparse
+import logging
 import os
 import shlex
 import subprocess
@@ -46,6 +47,7 @@ REPOS = {
     'xivo-web-interface': ('src', '/usr/share/xivo-web-interface'),
 }
 
+logger = logging.getLogger(__name__)
 base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
 xivo_src = '/home/jp/src/xivo'
 
@@ -72,8 +74,7 @@ class bcolors:
 
 
 def list_repositories_with_branch():
-    repos = _get_repos()
-    for name in repos:
+    for name in _get_repos():
         branch = _get_current_branch(name)
         print("%s : %s" % (name, branch))
 
@@ -100,7 +101,21 @@ def update_ctags():
     ctag_file = "/home/jp/.mytags"
     cmd = 'ctags -R --exclude="*.js" -f {tag_file} {src} '.format(tag_file=ctag_file, src=SOURCE_DIRECTORY)
     subprocess.call(shlex.split(cmd))
-    print("Updated CTAGS %s" % (ctag_file))
+    logger.info("Updated CTAGS %s", ctag_file)
+
+
+def pull_repositories():
+    for repo_name in _get_repos():
+        logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
+
+
+def _pull_repository_if_on_master(repo_name):
+    cmd = 'git pull'
+    current_branch = _get_current_branch(repo_name)
+    if(current_branch == 'master'):
+        return _exec_git_command(cmd, repo_name)
+    else:
+        return 'Not on branch master (%s)' % current_branch
 
 
 def print_mantra():
@@ -108,7 +123,8 @@ def print_mantra():
 
 
 def _get_repos():
-    return [name for name in os.listdir(SOURCE_DIRECTORY) if (os.path.isdir(os.path.join(SOURCE_DIRECTORY, name)) and name in REPOS)]
+    return [p for p in os.listdir(SOURCE_DIRECTORY)
+            if (os.path.isdir(os.path.join(SOURCE_DIRECTORY, p)) and p in REPOS)]
 
 
 def _get_current_branch(repo):
@@ -117,14 +133,15 @@ def _get_current_branch(repo):
 
 
 def _exec_git_command(cmd, repo):
+    logger.debug('%s on %s', cmd, repo)
     cmd = shlex.split(cmd)
     repo_dir = local_path(repo)
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
     result = process.communicate()
-    return result[0]
+    return result[0].strip()
 
 
-if __name__ == "__main__":
+def _parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                         action="store_true")
@@ -136,7 +153,21 @@ if __name__ == "__main__":
                         action="store_true")
     parser.add_argument("-r", "--rsync", help='sync repos on given IP or domain')
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def _init_logging(args):
+    level = logging.DEBUG if args.verbose else logging.INFO
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(asctime)s (%(levelname)s): %(message)s'))
+    root_logger.addHandler(handler)
+
+
+if __name__ == "__main__":
+    args = _parse_args()
+    _init_logging(args)
 
     if args.rsync:
         #DEV_HOST = DEV_HOST % (args.host)
@@ -148,5 +179,8 @@ if __name__ == "__main__":
 
     if args.tags:
         update_ctags()
+
+    if args.pull:
+        pull_repositories()
 
     print_mantra()
