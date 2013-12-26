@@ -17,7 +17,6 @@ OPTIONS:
 
 import argparse
 import logging
-import os
 import shlex
 import subprocess
 
@@ -65,8 +64,8 @@ class bcolors:
     ENDC = '\033[0m'
 
 
-def list_repositories_with_branch():
-    for name in _get_repos():
+def list_repositories_with_branch(requested_repositories):
+    for name in requested_repositories:
         branch = _get_current_branch(name)
         print("%s : %s" % (name, branch))
 
@@ -113,11 +112,6 @@ def _pull_repository_if_on_master(repo_name):
 
 def print_mantra():
     print bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC
-
-
-def _get_repos():
-    return [p for p in os.listdir(SOURCE_DIRECTORY)
-            if (os.path.isdir(os.path.join(SOURCE_DIRECTORY, p)) and p in REPOS)]
 
 
 def _get_current_branch(repo):
@@ -175,7 +169,7 @@ if __name__ == "__main__":
         rsync_repositories(args.sync, args.repos)
 
     if args.list:
-        list_repositories_with_branch()
+        list_repositories_with_branch(args.repos)
 
     if args.tags:
         update_ctags()
