@@ -77,7 +77,7 @@ def rsync_repositories(host, requested_repositories):
 
 
 def _rsync_repository(name):
-    cmd = "%s %s %s" % (base_command, _local_path(name), remote_uri(name))
+    cmd = "%s %s %s" % (base_command, _local_path(name), _remote_uri(name))
     print(cmd)
 
 
@@ -85,7 +85,7 @@ def _local_path(name):
     return '%s/%s/%s/%s' % (SOURCE_DIRECTORY, name, name, REPOS[name][0])
 
 
-def remote_uri(name):
+def _remote_uri(name):
     return '%s:%s' % (DEV_HOST, REPOS[name][1])
 
 
