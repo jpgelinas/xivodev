@@ -30,19 +30,20 @@ LIST_BRANCHES = False
 VERBOSE = False
 
 REPOS = {
-    'xivo-agent': ('xivo_agent', '/usr/lib/pymodules/python2.6/xivo_agent'),
-    'xivo-agid': ('xivo_agid', '/usr/lib/pymodules/python2.6/xivo_agid'),
-    'xivo-call-logs': ('xivo_call_logs', '/usr/lib/pymodules/python2.6/xivo_call_logs'),
-    'xivo-config': ('dialplan/asterisk', '/usr/share/xivo-config/dialplan/'),
-    'xivo-confgen': ('xivo_confgen', '/usr/lib/pymodules/python2.6/xivo_confgen'),
-    'xivo-ctid': ('xivo_cti', '/usr/lib/pymodules/python2.6/xivo_cti'),
-    'xivo-dao': ('xivo_dao', '/usr/lib/pymodules/python2.6/xivo_dao'),
-    'xivo-dird': ('xivo_dird', '/usr/lib/pymodules/python2.6/xivo_dird'),
-    'xivo-lib-python': ('xivo', '/usr/lib/pymodules/python2.6/xivo'),
-    'xivo-provisioning': ('src/provd', '/usr/lib/pymodules/python2.6/provd'),
-    'xivo-restapi': ('xivo_restapi', '/usr/lib/pymodules/python2.6/xivo_restapi'),
-    'xivo-stat': ('xivo_stat', '/usr/lib/pymodules/python2.6/xivo_stat'),
-    'xivo-sysconfd': ('xivo_sysconf', '/usr/lib/pymodules/python2.6/xivo_sysconf'),
+    'xivo-amid': ('xivo_ami', '/usr/lib/pymodules/python2.6/'),
+    'xivo-agent': ('xivo_agent', '/usr/lib/pymodules/python2.6/'),
+    'xivo-agid': ('xivo_agid', '/usr/lib/pymodules/python2.6/'),
+    'xivo-call-logs': ('xivo_call_logs', '/usr/lib/pymodules/python2.6/'),
+    #'xivo-config': ('dialplan/asterisk', '/usr/share/xivo-config/dialplan/'),
+    'xivo-confgen': ('xivo_confgen', '/usr/lib/pymodules/python2.6/'),
+    'xivo-ctid': ('xivo_cti', '/usr/lib/pymodules/python2.6/'),
+    'xivo-dao': ('xivo_dao', '/usr/lib/pymodules/python2.6/'),
+    'xivo-dird': ('xivo_dird', '/usr/lib/pymodules/python2.6/'),
+    'xivo-lib-python': ('xivo', '/usr/lib/pymodules/python2.6/'),
+    #'xivo-provisioning': ('src/provd', '/usr/lib/pymodules/python2.6/'),
+    'xivo-restapi': ('xivo_restapi', '/usr/lib/pymodules/python2.6/'),
+    'xivo-stat': ('xivo_stat', '/usr/lib/pymodules/python2.6/'),
+    'xivo-sysconfd': ('xivo_sysconf', '/usr/lib/pymodules/python2.6/'),
     'xivo-web-interface': ('src', '/usr/share/xivo-web-interface'),
 }
 
@@ -70,23 +71,24 @@ def list_repositories_with_branch(requested_repositories):
         print("%s : %s" % (name, branch))
 
 
-def rsync_repositories(host, requested_repositories):
-    logger.debug('host: %s | requested repos : %s', host, requested_repositories)
-    for name in requested_repositories:
-        _rsync_repository(name)
+def rsync_repositories(remote_host, requested_repositories):
+    logger.debug('host: %s | requested repos : %s', remote_host, requested_repositories)
+    for repo_name in requested_repositories:
+        _rsync_repository(remote_host, repo_name)
 
 
-def _rsync_repository(name):
-    cmd = "%s %s %s" % (base_command, _local_path(name), _remote_uri(name))
-    print(cmd)
+def _rsync_repository(remote_host, repo_name):
+    cmd = "%s %s %s" % (base_command, _local_path(repo_name), _remote_uri(remote_host, repo_name))
+    logger.debug('about to execute rsync command : %s', cmd)
+    subprocess.call(shlex.split(cmd))
 
 
 def _local_path(name):
     return '%s/%s/%s/%s' % (SOURCE_DIRECTORY, name, name, REPOS[name][0])
 
 
-def _remote_uri(name):
-    return '%s:%s' % (DEV_HOST, REPOS[name][1])
+def _remote_uri(remote_host, repo_name):
+    return '%s:%s' % (remote_host, REPOS[repo_name][1])
 
 
 def update_ctags():
