@@ -17,6 +17,7 @@ OPTIONS:
 
 import argparse
 import os
+import shlex
 import subprocess
 
 DEV_HOST = "root@%s"
@@ -74,8 +75,11 @@ def remote_uri(name):
     return '%s:%s' % (DEV_HOST, REPOS[name][1])
 
 
-def update_tags():
-    subprocess.call(['ctags', '-R', '-f', '~/.mytags', SOURCE_DIRECTORY_FILES])
+def update_ctags():
+    ctag_file = "/home/jp/.mytags"
+    cmd = 'ctags -R --exclude="*.js" -f {tag_file} {src} '.format(tag_file=ctag_file, src=SOURCE_DIRECTORY)
+    subprocess.call(shlex.split(cmd))
+    print("Updated CTAGS %s" % (ctag_file))
 
 
 # Broken : no colors
@@ -98,16 +102,6 @@ def _exec_git_command(cmd, repo):
     result = process.communicate()
     #subprocess.call(['popd'])
     return result[0]
-
-
-def update_ctags():
-    #result=`ctags -R -f ~/.mytags $SOURCE_DIRECTORY_FILES`
-    ctag_file = "~/.mytags"
-    cmd = "ctags -R -f %s %s" % (ctag_file, SOURCE_DIRECTORY_FILES)
-    print cmd
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    result = process.communicate()
-    print("Updated CTAGS %s : %s" % (ctag_file, result))
 
 
 if __name__ == "__main__":
