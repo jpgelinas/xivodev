@@ -77,11 +77,11 @@ def rsync_repositories(host, requested_repositories):
 
 
 def _rsync_repository(name):
-    cmd = "%s %s %s" % (base_command, local_path(name), remote_uri(name))
+    cmd = "%s %s %s" % (base_command, _local_path(name), remote_uri(name))
     print(cmd)
 
 
-def local_path(name):
+def _local_path(name):
     return '%s/%s/%s/%s' % (SOURCE_DIRECTORY, name, name, REPOS[name][0])
 
 
@@ -122,7 +122,7 @@ def _get_current_branch(repo):
 def _exec_git_command(cmd, repo):
     logger.debug('%s on %s', cmd, repo)
     cmd = shlex.split(cmd)
-    repo_dir = local_path(repo)
+    repo_dir = _local_path(repo)
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
     result = process.communicate()
     return result[0].strip()
