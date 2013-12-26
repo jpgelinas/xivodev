@@ -72,7 +72,7 @@ class bcolors:
 
 
 def list_repositories_with_branch():
-    repos = [name for name in os.listdir(SOURCE_DIRECTORY) if (os.path.isdir(os.path.join(SOURCE_DIRECTORY, name)) and name in REPOS)]
+    repos = _get_repos()
     for name in repos:
         branch = _get_current_branch(name)
         print("%s : %s" % (name, branch))
@@ -105,6 +105,10 @@ def update_ctags():
 
 def print_mantra():
     print bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC
+
+
+def _get_repos():
+    return [name for name in os.listdir(SOURCE_DIRECTORY) if (os.path.isdir(os.path.join(SOURCE_DIRECTORY, name)) and name in REPOS)]
 
 
 def _get_current_branch(repo):
