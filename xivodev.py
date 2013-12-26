@@ -108,11 +108,12 @@ def print_mantra():
 
 
 def _get_current_branch(repo):
-    cmd = ['git', 'rev-parse',  '--abbrev-ref',  'HEAD']
+    cmd = 'git rev-parse --abbrev-ref HEAD'
     return _exec_git_command(cmd, repo).strip()
 
 
 def _exec_git_command(cmd, repo):
+    cmd = shlex.split(cmd)
     repo_dir = local_path(repo)
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
     result = process.communicate()
