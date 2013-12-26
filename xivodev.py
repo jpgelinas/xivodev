@@ -97,8 +97,8 @@ def update_ctags():
     logger.info("Updated CTAGS %s", ctag_file)
 
 
-def pull_repositories():
-    for repo_name in _get_repos():
+def pull_repositories(requested_repositories):
+    for repo_name in requested_repositories:
         logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
 
 
@@ -181,6 +181,6 @@ if __name__ == "__main__":
         update_ctags()
 
     if args.pull:
-        pull_repositories()
+        pull_repositories(args.repos)
 
     print_mantra()
