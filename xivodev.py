@@ -71,12 +71,13 @@ def list_repositories_with_branch():
         print("%s : %s" % (name, branch))
 
 
-def sync_all():
-    for name in REPOS.iterkeys():
-        sync(name)
+def rsync_repositories(host, requested_repositories):
+    logger.debug('host: %s | requested repos : %s', host, requested_repositories)
+    for name in requested_repositories:
+        _rsync_repository(name)
 
 
-def sync(name):
+def _rsync_repository(name):
     cmd = "%s %s %s" % (base_command, local_path(name), remote_uri(name))
     print(cmd)
 
@@ -133,6 +134,13 @@ def _exec_git_command(cmd, repo):
     return result[0].strip()
 
 
+def is_handled_repo(repo_name):
+    if repo_name not in REPOS.iterkeys():
+        msg = '%s is not a supported repository name' % repo_name
+        raise argparse.ArgumentTypeError(msg)
+    return repo_name
+
+
 def _parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
@@ -143,7 +151,9 @@ def _parse_args():
                         action="store_true")
     parser.add_argument("-l", "--list", help="list all repositories and their current branch",
                         action="store_true")
-    parser.add_argument("-r", "--rsync", help='sync repos on given IP or domain')
+    parser.add_argument("-s", "--sync", help='sync repos on given IP or domain')
+    parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
+                        nargs='*', type=is_handled_repo, default=[name for name in REPOS.iterkeys()])
 
     return parser.parse_args()
 
@@ -161,10 +171,8 @@ if __name__ == "__main__":
     args = _parse_args()
     _init_logging(args)
 
-    if args.rsync:
-        #DEV_HOST = DEV_HOST % (args.host)
-        #sync_all()
-        pass
+    if args.sync:
+        rsync_repositories(args.sync, args.repos)
 
     if args.list:
         list_repositories_with_branch()
