@@ -114,13 +114,8 @@ def _get_current_branch(repo):
 
 def _exec_git_command(cmd, repo):
     repo_dir = local_path(repo)
-    #print repo_dir
-    #print cmd
-    #subprocess.['pushd', repo_dir])
-    #result = subprocess.call(cmd)
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
     result = process.communicate()
-    #subprocess.call(['popd'])
     return result[0]
 
 
