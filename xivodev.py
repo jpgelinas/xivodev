@@ -50,6 +50,27 @@ base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
 xivo_src = '/home/jp/src/xivo'
 
 
+class bcolors:
+    """
+    old colors :
+        #print "\e[00;31mReady\e[00m, \e[1;33mSet\e[00m, \e[0;32mC0DE!\e[00m"
+    """
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+    def disable(self):
+        self.HEADER = ''
+        self.OKBLUE = ''
+        self.OKGREEN = ''
+        self.WARNING = ''
+        self.FAIL = ''
+        self.ENDC = ''
+
+
 def list_repositories_with_branch():
     repos = [name for name in os.listdir(SOURCE_DIRECTORY) if (os.path.isdir(os.path.join(SOURCE_DIRECTORY, name)) and name in REPOS)]
     for name in repos:
@@ -82,9 +103,8 @@ def update_ctags():
     print("Updated CTAGS %s" % (ctag_file))
 
 
-# Broken : no colors
 def print_mantra():
-    print "\e[00;31mReady\e[00m, \e[1;33mSet\e[00m, \e[0;32mC0DE!\e[00m"
+    print bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC
 
 
 def _get_current_branch(repo):
@@ -128,3 +148,5 @@ if __name__ == "__main__":
 
     if args.tags:
         update_ctags()
+
+    print_mantra()
