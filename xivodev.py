@@ -151,7 +151,7 @@ def _parse_args():
                         action="store_true")
     parser.add_argument("-l", "--list", help="list all repositories and their current branch",
                         action="store_true")
-    parser.add_argument("-s", "--sync", help='sync repos on given IP or domain')
+    parser.add_argument("-s", "--sync", help='sync repos on given IP or hostname')
     parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
                         nargs='*', type=is_handled_repo, default=[name for name in REPOS.iterkeys()])
 
