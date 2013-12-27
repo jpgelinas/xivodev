@@ -8,10 +8,10 @@ This script git pulls all repos in directory with a few bells and whistles.
 
 OPTIONS:
    -h      Show this message
-   -s      Rsync given xivo ip|hostname
+   -s      Rsync repositories on given xivo ip|hostname
    -p      git pull repositories
    -t      Update ctags
-   -l      List all repositories and their current branch
+   -l      List repositories and their current branch
    -r      Concerned Repositories. By default, options affect all managed repositories. specifiying repos will limit the scope on wich options operate.
    -v      Verbose
 """
