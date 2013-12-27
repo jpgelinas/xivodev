@@ -78,20 +78,6 @@ def rsync_repositories(remote_host, requested_repositories):
         _rsync_repository(remote_host, repo_name)
 
 
-def _rsync_repository(remote_host, repo_name):
-    cmd = "%s %s %s" % (base_command, _local_path(repo_name), _remote_uri(remote_host, repo_name))
-    logger.debug('about to execute rsync command : %s', cmd)
-    subprocess.call(shlex.split(cmd))
-
-
-def _local_path(name):
-    return '%s/%s/%s/%s' % (SOURCE_DIRECTORY, name, name, REPOS[name][0])
-
-
-def _remote_uri(remote_host, repo_name):
-    return '%s:%s' % (remote_host, REPOS[repo_name][1])
-
-
 def update_ctags():
     ctag_file = "/home/jp/.mytags"
     cmd = 'ctags -R --exclude="*.js" -f {tag_file} {src} '.format(tag_file=ctag_file, src=SOURCE_DIRECTORY)
@@ -104,33 +90,6 @@ def pull_repositories(requested_repositories):
         logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
 
 
-def _pull_repository_if_on_master(repo_name):
-    cmd = 'git pull'
-    current_branch = _get_current_branch(repo_name)
-    if(current_branch == 'master'):
-        return _exec_git_command(cmd, repo_name)
-    else:
-        return 'Not on branch master (%s)' % current_branch
-
-
-def print_mantra():
-    print bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC
-
-
-def _get_current_branch(repo):
-    cmd = 'git rev-parse --abbrev-ref HEAD'
-    return _exec_git_command(cmd, repo).strip()
-
-
-def _exec_git_command(cmd, repo):
-    logger.debug('%s on %s', cmd, repo)
-    cmd = shlex.split(cmd)
-    repo_dir = _local_path(repo)
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
-    result = process.communicate()
-    return result[0].strip()
-
-
 def is_handled_repo(repo_name):
     if repo_name not in REPOS.iterkeys():
         msg = '%s is not a supported repository name' % repo_name
@@ -138,7 +97,7 @@ def is_handled_repo(repo_name):
     return repo_name
 
 
-def _parse_args():
+def parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                         action="store_true")
@@ -155,7 +114,7 @@ def _parse_args():
     return parser.parse_args()
 
 
-def _init_logging(args):
+def init_logging(args):
     level = logging.DEBUG if args.verbose else logging.INFO
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
@@ -164,9 +123,50 @@ def _init_logging(args):
     root_logger.addHandler(handler)
 
 
+def print_mantra():
+    print bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC
+
+
+def _rsync_repository(remote_host, repo_name):
+    cmd = "%s %s %s" % (base_command, _local_path(repo_name), _remote_uri(remote_host, repo_name))
+    logger.debug('about to execute rsync command : %s', cmd)
+    subprocess.call(shlex.split(cmd))
+
+
+def _local_path(name):
+    return '%s/%s/%s/%s' % (SOURCE_DIRECTORY, name, name, REPOS[name][0])
+
+
+def _remote_uri(remote_host, repo_name):
+    return '%s:%s' % (remote_host, REPOS[repo_name][1])
+
+
+def _pull_repository_if_on_master(repo_name):
+    cmd = 'git pull'
+    current_branch = _get_current_branch(repo_name)
+    if(current_branch == 'master'):
+        return _exec_git_command(cmd, repo_name)
+    else:
+        return 'Not on branch master (%s)' % current_branch
+
+
+def _get_current_branch(repo):
+    cmd = 'git rev-parse --abbrev-ref HEAD'
+    return _exec_git_command(cmd, repo).strip()
+
+
+def _exec_git_command(cmd, repo):
+    logger.debug('%s on %s', cmd, repo)
+    cmd = shlex.split(cmd)
+    repo_dir = _local_path(repo)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
+    result = process.communicate()
+    return result[0].strip()
+
+
 if __name__ == "__main__":
-    args = _parse_args()
-    _init_logging(args)
+    args = parse_args()
+    init_logging(args)
 
     if args.sync:
         rsync_repositories(args.sync, args.repos)
