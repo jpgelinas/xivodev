@@ -31,20 +31,20 @@ LIST_BRANCHES = False
 VERBOSE = False
 
 REPOS = {
-    'xivo-amid': ('xivo_ami', '/usr/lib/pymodules/python2.6/'),
-    'xivo-agent': ('xivo_agent', '/usr/lib/pymodules/python2.6/'),
-    'xivo-agid': ('xivo_agid', '/usr/lib/pymodules/python2.6/'),
-    'xivo-call-logs': ('xivo_call_logs', '/usr/lib/pymodules/python2.6/'),
+    'xivo-amid': ('xivo_ami', '/usr/lib/pymodules/python2.7/'),
+    'xivo-agent': ('xivo_agent', '/usr/lib/pymodules/python2.7/'),
+    'xivo-agid': ('xivo_agid', '/usr/lib/pymodules/python2.7/'),
+    'xivo-call-logs': ('xivo_call_logs', '/usr/lib/pymodules/python2.7/'),
     #'xivo-config': ('dialplan/asterisk', '/usr/share/xivo-config/dialplan/'),
-    'xivo-confgen': ('xivo_confgen', '/usr/lib/pymodules/python2.6/'),
-    'xivo-ctid': ('xivo_cti', '/usr/lib/pymodules/python2.6/'),
-    'xivo-dao': ('xivo_dao', '/usr/lib/pymodules/python2.6/'),
-    'xivo-dird': ('xivo_dird', '/usr/lib/pymodules/python2.6/'),
-    'xivo-lib-python': ('xivo', '/usr/lib/pymodules/python2.6/'),
-    #'xivo-provisioning': ('src/provd', '/usr/lib/pymodules/python2.6/'),
-    'xivo-restapi': ('xivo_restapi', '/usr/lib/pymodules/python2.6/'),
-    'xivo-stat': ('xivo_stat', '/usr/lib/pymodules/python2.6/'),
-    'xivo-sysconfd': ('xivo_sysconf', '/usr/lib/pymodules/python2.6/'),
+    'xivo-confgen': ('xivo_confgen', '/usr/lib/pymodules/python2.7/'),
+    'xivo-ctid': ('xivo_cti', '/usr/lib/pymodules/python2.7/'),
+    'xivo-dao': ('xivo_dao', '/usr/lib/pymodules/python2.7/'),
+    'xivo-dird': ('xivo_dird', '/usr/lib/pymodules/python2.7/'),
+    'xivo-lib-python': ('xivo', '/usr/lib/pymodules/python2.7/'),
+    #'xivo-provisioning': ('src/provd', '/usr/lib/pymodules/python2.7/'),
+    'xivo-restapi': ('xivo_restapi', '/usr/lib/pymodules/python2.7/'),
+    'xivo-stat': ('xivo_stat', '/usr/lib/pymodules/python2.7/'),
+    'xivo-sysconfd': ('xivo_sysconf', '/usr/lib/pymodules/python2.7/'),
     'xivo-web-interface': ('src', '/usr/share/xivo-web-interface'),
 }
 
