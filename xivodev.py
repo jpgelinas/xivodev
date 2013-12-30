@@ -68,7 +68,10 @@ class bcolors:
 
 def list_repositories_with_branch(requested_repositories):
     for name in requested_repositories:
+        format_non_master = bcolors.FAIL + "{branch}" + bcolors.ENDC
         branch = _get_current_branch(name)
+        if branch != 'master':
+            branch = format_non_master.format(branch=branch)
         print("%s : %s" % (name, branch))
 
 
@@ -124,7 +127,7 @@ def init_logging(args):
 
 
 def print_mantra():
-    print bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC
+    print ("\n" + bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC)
 
 
 def _rsync_repository(remote_host, repo_name):
@@ -167,6 +170,7 @@ def _exec_git_command(cmd, repo):
 if __name__ == "__main__":
     args = parse_args()
     init_logging(args)
+    print("")  # enforced newline
 
     if args.sync:
         rsync_repositories(args.sync, args.repos)
