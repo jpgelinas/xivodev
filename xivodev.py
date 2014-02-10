@@ -31,21 +31,23 @@ LIST_BRANCHES = False
 VERBOSE = False
 
 REPOS = {
-    'xivo-amid': ('xivo_ami', '/usr/lib/pymodules/python2.7/'),
-    'xivo-agent': ('xivo_agent', '/usr/lib/pymodules/python2.7/'),
-    'xivo-agid': ('xivo_agid', '/usr/lib/pymodules/python2.7/'),
-    'xivo-call-logs': ('xivo_call_logs', '/usr/lib/pymodules/python2.7/'),
+    'xivo-amid': ('xivo_ami', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-agent': ('xivo_agent', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-agid': ('xivo_agid', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-bus': ('xivo_bus', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-call-logs': ('xivo_call_logs', '/usr/lib/python2.7/dist-packages/'),
     #'xivo-config': ('dialplan/asterisk', '/usr/share/xivo-config/dialplan/'),
-    'xivo-confgen': ('xivo_confgen', '/usr/lib/pymodules/python2.7/'),
-    'xivo-ctid': ('xivo_cti', '/usr/lib/pymodules/python2.7/'),
-    'xivo-dao': ('xivo_dao', '/usr/lib/pymodules/python2.7/'),
-    'xivo-dird': ('xivo_dird', '/usr/lib/pymodules/python2.7/'),
-    'xivo-lib-python': ('xivo', '/usr/lib/pymodules/python2.7/'),
-    #'xivo-provisioning': ('src/provd', '/usr/lib/pymodules/python2.7/'),
-    'xivo-restapi': ('xivo_restapi', '/usr/lib/pymodules/python2.7/'),
-    'xivo-stat': ('xivo_stat', '/usr/lib/pymodules/python2.7/'),
-    'xivo-sysconfd': ('xivo_sysconf', '/usr/lib/pymodules/python2.7/'),
+    'xivo-confgen': ('xivo_confgen', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-ctid': ('xivo_cti', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-dao': ('xivo_dao', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-dird': ('xivo_dird', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-lib-python': ('xivo', '/usr/lib/python2.7/dist-packages/'),
+    #'xivo-provisioning': ('src/provd', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-restapi': ('xivo_restapi', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-stat': ('xivo_stat', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-sysconfd': ('xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
     'xivo-web-interface': ('src', '/usr/share/xivo-web-interface'),
+    #'xivo-upgrade': ('', ''),
 }
 
 logger = logging.getLogger(__name__)
