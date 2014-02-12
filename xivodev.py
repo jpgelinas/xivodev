@@ -13,6 +13,9 @@ OPTIONS:
    -t      Update ctags
    -l      List repositories and their current branch
    -r      Concerned Repositories. By default, options affect all managed repositories. specifiying repos will limit the scope on wich options operate.
+   -vl     List Virtualbox VMs
+   -v1     Start given Virtualbox VMs
+   -v0     Stop given Virtualbox VMs
    -v      Verbose
 """
 
@@ -102,6 +105,30 @@ def is_handled_repo(repo_name):
     return repo_name
 
 
+# vm management
+# see https://nfolamp.wordpress.com/2010/06/10/running-virtualbox-guest-vms-in-headless-mode/
+#
+def list_vms():
+    print (bcolors.FAIL + "All VMs" + bcolors.ENDC)
+    cmd = 'VBoxManage list vms'
+    subprocess.call(shlex.split(cmd))
+    print ("\n" + bcolors.OKGREEN + "Running VMs" + bcolors.ENDC)
+    cmd = 'VBoxManage list runningvms'
+    subprocess.call(shlex.split(cmd))
+
+
+def start_vm(name):
+    cmd = 'sh -c "nohup VBoxHeadless -s {vm_name} -v on &"'.format(vm_name=name)
+    subprocess.call(shlex.split(cmd))
+    logger.info("started vm %s", name)
+
+
+def kill_vm(name):
+    cmd = 'VBoxManage contolvm {vm_name} poweroff'.format(vm_name=name)
+    subprocess.call(shlex.split(cmd))
+    logger.info("stopped vm %s", name)
+
+
 def parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
@@ -113,6 +140,10 @@ def parse_args():
     parser.add_argument("-l", "--list", help="list all repositories and their current branch",
                         action="store_true")
     parser.add_argument("-s", "--sync", help='sync repos on given IP or hostname')
+    parser.add_argument("-vl", "--vmlist", help='list virtualbox vms',
+                        action="store_true")
+    parser.add_argument("-v1", "--vmstart", help='start virtualbox vm with given name')
+    parser.add_argument("-v0", "--vmstop", help=' stop virtualbox vm with given name')
     parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
                         nargs='*', type=is_handled_repo, default=[name for name in REPOS.iterkeys()])
 
@@ -185,5 +216,14 @@ if __name__ == "__main__":
 
     if args.pull:
         pull_repositories(args.repos)
+
+    if args.vmstart:
+        start_vm(args.vmstart)
+
+    if args.vmstop:
+        kill_vm(args.vmstop)
+
+    if args.vmlist:
+        list_vms()
 
     print_mantra()
