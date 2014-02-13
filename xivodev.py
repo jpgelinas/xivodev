@@ -129,6 +129,12 @@ def kill_vm(name):
     logger.info("stopped vm %s", name)
 
 
+def snapshot_vm(name, description):
+    cmd = 'VBoxManage snapshot {vm_name} take {description}'.format(vm_name=name, description=description)
+    subprocess.call(shlex.split(cmd))
+    logger.info("stopped vm %s", name)
+
+
 def parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
