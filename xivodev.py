@@ -7,12 +7,13 @@ usage: $0 options
 This script git pulls all repos in directory with a few bells and whistles.
 
 OPTIONS:
+   -f      Git fetch repos
    -h      Show this message
+   -l      List repositories and their current branch
    -s      Rsync repositories on given xivo ip|hostname
    -p      git pull repositories
-   -t      Update ctags
-   -l      List repositories and their current branch
    -r      Concerned Repositories. By default, options affect all managed repositories. specifiying repos will limit the scope on wich options operate.
+   -t      Update ctags
    -vl     List Virtualbox VMs
    -v1     Start given Virtualbox VMs
    -v0     Stop given Virtualbox VMs
@@ -69,6 +70,12 @@ class bcolors:
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
+
+
+def fetch_repositories(requested_repositories):
+    for repo_name in requested_repositories:
+        cmd = 'git fetch -p'
+        print("%s" % _exec_git_command(cmd, repo_name))
 
 
 def list_repositories_with_branch(requested_repositories):
@@ -132,11 +139,13 @@ def kill_vm(name):
 def snapshot_vm(name, description):
     cmd = 'VBoxManage snapshot {vm_name} take {description}'.format(vm_name=name, description=description)
     subprocess.call(shlex.split(cmd))
-    logger.info("stopped vm %s", name)
+    logger.info("snapshot vm %s with description %s", name, description)
 
 
 def parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
+    parser.add_argument("-f", "--fetch", help="git fetch repositories",
+                        action="store_true")
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                         action="store_true")
     parser.add_argument("-t", "--tags", help="update CTAGS",
@@ -150,6 +159,8 @@ def parse_args():
                         action="store_true")
     parser.add_argument("-v1", "--vmstart", help='start virtualbox vm with given name')
     parser.add_argument("-v0", "--vmstop", help=' stop virtualbox vm with given name')
+    parser.add_argument("-vs", "--vmsnapshot", help=' snapshot virtualbox vm with given name',
+                        nargs=2, metavar=('name', 'description'))
     parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
                         nargs='*', type=is_handled_repo, default=[name for name in REPOS.iterkeys()])
 
@@ -211,25 +222,32 @@ if __name__ == "__main__":
     init_logging(args)
     print("")  # enforced newline
 
-    if args.sync:
-        rsync_repositories(args.sync, args.repos)
-
     if args.list:
         list_repositories_with_branch(args.repos)
 
-    if args.tags:
-        update_ctags()
+    if args.fetch:
+        fetch_repositories(args.repos)
 
     if args.pull:
         pull_repositories(args.repos)
 
-    if args.vmstart:
-        start_vm(args.vmstart)
+    if args.tags:
+        update_ctags()
+
+    if args.sync:
+        rsync_repositories(args.sync, args.repos)
+
+    if args.vmlist:
+        list_vms()
 
     if args.vmstop:
         kill_vm(args.vmstop)
 
-    if args.vmlist:
-        list_vms()
+    if args.vmsnapshot:
+        name, description = args.vmsnapshot
+        snapshot_vm(name, description)
+
+    if args.vmstart:
+        start_vm(args.vmstart)
 
     print_mantra()
