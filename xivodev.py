@@ -44,8 +44,8 @@ REPOS = {
     'xivo-stat': ('xivo-stat/xivo_stat', '/usr/lib/python2.7/dist-packages/'),
     'xivo-sysconfd': ('xivo-sysconfd/xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
     'xivo-web-interface': ('xivo-web-interface/src', '/usr/share/xivo-web-interface'),
-    #'xivo-upgrade': ('', ''),
-    'xivo-doc': ('source', None),
+    'xivo-upgrade': None,
+    'xivo-doc': None,
 }
 
 logger = logging.getLogger(__name__)
@@ -177,18 +177,24 @@ def print_mantra():
 
 
 def _rsync_repository(remote_host, repo_name):
-    remote_uri = _remote_uri(remote_host, repo_name)
-    if remote_uri:
+    if _repo_is_syncable(repo_name):
+        remote_uri = _remote_uri(remote_host, repo_name)
         cmd = "%s %s %s" % (base_command, _local_path(repo_name), remote_uri)
         logger.debug('about to execute rsync command : %s', cmd)
         subprocess.call(shlex.split(cmd))
 
 
+def _repo_is_syncable(name):
+    return REPOS[name]
+
+
 def _local_path(name):
     return '%s/%s' % (_repo_path(name), REPOS[name][0])
 
+
 def _repo_path(name):
     return '%s/%s' % (SOURCE_DIRECTORY, name)
+
 
 def _remote_uri(remote_host, repo_name):
     remote_path = REPOS[repo_name][1]
