@@ -25,14 +25,7 @@ import logging
 import shlex
 import subprocess
 
-DEV_HOST = "root@%s"
 SOURCE_DIRECTORY = "/home/jp/src/xivo"
-SOURCE_DIRECTORY_FILES = "%s/*" % SOURCE_DIRECTORY
-UPDATE_TAGS = False
-PULL = False
-RSYNC = False
-LIST_BRANCHES = False
-VERBOSE = False
 
 REPOS = {
     'xivo-amid': ('xivo_ami', '/usr/lib/python2.7/dist-packages/'),
