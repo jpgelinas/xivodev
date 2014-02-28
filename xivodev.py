@@ -75,7 +75,9 @@ class bcolors:
 def fetch_repositories(requested_repositories):
     for repo_name in requested_repositories:
         cmd = 'git fetch -p'
-        print("%s" % _exec_git_command(cmd, repo_name))
+        ret = _exec_git_command(cmd, repo_name)
+        if ret:
+            print("%s" % ret)
 
 
 def list_repositories_with_branch(requested_repositories):
