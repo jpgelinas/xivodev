@@ -28,23 +28,24 @@ import subprocess
 SOURCE_DIRECTORY = "/home/jp/src/xivo"
 
 REPOS = {
-    'xivo-amid': ('xivo_ami', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-agent': ('xivo_agent', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-agid': ('xivo_agid', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-bus': ('xivo_bus', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-call-logs': ('xivo_call_logs', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-amid': ('xivo-amid/xivo_ami', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-agent': ('xivo-agent/xivo_agent', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-agid': ('xivo-agid/xivo_agid', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-bus': ('xivo-bus/xivo_bus', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-call-logs': ('xivo-call-logs/xivo_call_logs', '/usr/lib/python2.7/dist-packages/'),
     #'xivo-config': ('dialplan/asterisk', '/usr/share/xivo-config/dialplan/'),
-    'xivo-confgen': ('xivo_confgen', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-ctid': ('xivo_cti', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-dao': ('xivo_dao', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-dird': ('xivo_dird', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-lib-python': ('xivo', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-confgen': ('xivo-confgen/xivo_confgen', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-ctid': ('xivo-ctid/xivo_cti', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-dao': ('xivo-dao/xivo_dao', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-dird': ('xivo-dird/xivo_dird', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-lib-python': ('xivo-lib-python/xivo', '/usr/lib/python2.7/dist-packages/'),
     #'xivo-provisioning': ('src/provd', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-restapi': ('xivo_restapi', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-stat': ('xivo_stat', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-sysconfd': ('xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-web-interface': ('src', '/usr/share/xivo-web-interface'),
+    'xivo-restapi': ('xivo-restapi/xivo_restapi', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-stat': ('xivo-stat/xivo_stat', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-sysconfd': ('xivo-sysconfd/xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-web-interface': ('xivo-web-interface/src', '/usr/share/xivo-web-interface'),
     #'xivo-upgrade': ('', ''),
+    'xivo-doc': ('source', None),
 }
 
 logger = logging.getLogger(__name__)
@@ -176,17 +177,23 @@ def print_mantra():
 
 
 def _rsync_repository(remote_host, repo_name):
-    cmd = "%s %s %s" % (base_command, _local_path(repo_name), _remote_uri(remote_host, repo_name))
-    logger.debug('about to execute rsync command : %s', cmd)
-    subprocess.call(shlex.split(cmd))
+    remote_uri = _remote_uri(remote_host, repo_name)
+    if remote_uri:
+        cmd = "%s %s %s" % (base_command, _local_path(repo_name), remote_uri)
+        logger.debug('about to execute rsync command : %s', cmd)
+        subprocess.call(shlex.split(cmd))
 
 
 def _local_path(name):
-    return '%s/%s/%s/%s' % (SOURCE_DIRECTORY, name, name, REPOS[name][0])
+    return '%s/%s/%s' % (SOURCE_DIRECTORY, name, REPOS[name][0])
 
 
 def _remote_uri(remote_host, repo_name):
-    return '%s:%s' % (remote_host, REPOS[repo_name][1])
+    remote_path = REPOS[repo_name][1]
+    if remote_path:
+        return '%s:%s' % (remote_host, REPOS[repo_name][1])
+    else:
+        return None
 
 
 def _pull_repository_if_on_master(repo_name):
