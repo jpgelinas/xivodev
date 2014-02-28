@@ -7,6 +7,7 @@ usage: $0 options
 This script git pulls all repos in directory with a few bells and whistles.
 
 OPTIONS:
+   -c      Check Code Coverage
    -f      Git fetch repos
    -h      Show this message
    -l      List repositories and their current branch
@@ -24,6 +25,7 @@ import argparse
 import logging
 import shlex
 import subprocess
+from sh import cd, pwd, nosetests2
 
 SOURCE_DIRECTORY = "/home/jp/src/xivo"
 
@@ -120,8 +122,8 @@ def update_ctags():
     logger.info("Updated CTAGS %s", ctag_file)
 
 
-def pull_repositories(requested_repositories):
-    for repo_name in requested_repositories:
+def pull_repositories(repositories):
+    for repo_name in repositories:
         logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
 
 
@@ -130,6 +132,17 @@ def is_handled_repo(repo_name):
         msg = '%s is not a supported repository name' % repo_name
         raise argparse.ArgumentTypeError(msg)
     return repo_name
+
+
+#
+# code coverage
+#
+def check_coverage(repositories):
+    cd('/tmp')
+    for repo_name in repositories:
+        repo_path = _local_path(repo_name)
+        logger.debug("%s : %s" % (repo_name, repo_path))
+        #nosetests2('--with-coverage', '--cover-package=xivo_ami', repo_path)
 
 
 # vm management
@@ -164,6 +177,8 @@ def snapshot_vm(name, description):
 
 def parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
+    parser.add_argument("-c", "--coverage", help="check code coverage",
+                        action="store_true")
     parser.add_argument("-f", "--fetch", help="git fetch repositories",
                         action="store_true")
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
@@ -255,6 +270,9 @@ if __name__ == "__main__":
     args = parse_args()
     init_logging(args)
     print("")  # enforced newline
+
+    if args.coverage:
+        check_coverage(args.repos)
 
     if args.list:
         list_repositories_with_branch(args.repos)
