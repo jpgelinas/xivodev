@@ -190,12 +190,11 @@ def check_coverage(repositories):
 # see https://nfolamp.wordpress.com/2010/06/10/running-virtualbox-guest-vms-in-headless-mode/
 #
 def list_vms():
-    print (bcolors.FAIL + "All VMs" + bcolors.ENDC)
-    cmd = 'VBoxManage list vms'
-    subprocess.call(shlex.split(cmd))
-    print ("\n" + bcolors.OKGREEN + "Running VMs" + bcolors.ENDC)
-    cmd = 'VBoxManage list runningvms'
-    subprocess.call(shlex.split(cmd))
+    msg_all = bcolors.FAIL + "All VMs" + bcolors.ENDC + '\n'
+    result_all = sh.VBoxManage('list', 'vms')
+    msg_running = "\n" + bcolors.OKGREEN + "Running VMs" + bcolors.ENDC + '\n'
+    result_running = sh.VBoxManage('list', 'runningvms')
+    print('%s %s %s %s' % (msg_all, result_all, msg_running, result_running))
 
 
 def start_vm(name):
