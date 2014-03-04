@@ -167,9 +167,8 @@ def rsync_repositories(remote_host, requested_repositories):
 
 def update_ctags():
     ctag_file = "/home/jp/.mytags"
-    cmd = 'ctags -R --exclude="*.js" -f {tag_file} {src} '.format(tag_file=ctag_file, src=SOURCE_DIRECTORY)
-    subprocess.call(shlex.split(cmd))
-    logger.info("Updated CTAGS %s", ctag_file)
+    print(sh.ctags('-R', '--exclude="*.js"', '-f', ctag_file, SOURCE_DIRECTORY))
+    logger.info('Updated CTAGS %s', ctag_file)
 
 
 def pull_repositories(repositories):
