@@ -19,59 +19,61 @@ OPTIONS:
    -v1     Start given Virtualbox VMs
    -v0     Stop given Virtualbox VMs
    -v      Verbose
+   -d      Dry run mode : echoes commands without executing
 """
 
 import argparse
 import logging
 import shlex
 import subprocess
-from sh import cd, pwd, nosetests2
+import sh
+
 
 SOURCE_DIRECTORY = "/home/jp/src/xivo"
 
 REPOS = {
-    'xivo-amid': ('xivo-amid/xivo_ami', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-agent': ('xivo-agent/xivo_agent', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-agid': ('xivo-agid/xivo_agid', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-bus': ('xivo-bus/xivo_bus', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-call-logs': ('xivo-call-logs/xivo_call_logs', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-config': ('xivo-config/dialplan/asterisk', '/usr/share/xivo-config/dialplan/'),
-    'xivo-confgen': ('xivo-confgen/xivo_confgen', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-ctid': ('xivo-ctid/xivo_cti', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-dao': ('xivo-dao/xivo_dao', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-dird': ('xivo-dird/xivo_dird', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-lib-python': ('xivo-lib-python/xivo', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-provisioning': ('xivo-provisioning/src/provd', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-restapi': ('xivo-restapi/xivo_restapi', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-stat': ('xivo-stat/xivo_stat', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-sysconfd': ('xivo-sysconfd/xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-web-interface': ('xivo-web-interface/src', '/usr/share/xivo-web-interface'),
-    'xivo-upgrade': None,
-    'xivo-doc': None,
-    'xivo': None,
-    'xivo-acceptance': None,
-    'create_archive_file': None,
-    'asterisk11': None,
-    'debian-installer': None,
-    'pylinphonelib': None,
-    'xivo-acceptance': None,
-    'xivo-backup': None,
-    'xivo-build-tools': None,
-    'xivo-client-qt': None,
-    'xivo-experimental': None,
-    'xivo-fetchfw': None,
-    'xivo-install-cd': None,
-    'xivo-lib-js': None,
-    'xivo-libsccp': None,
-    'xivo-loadtest': None,
-    'xivo-manage-db': None,
-    'xivo-monitoring': None,
-    'xivo-presentations': None,
-    'xivo-provd-plugins': None,
-    'xivo-sounds': None,
-    'xivo-tools': None,
-    'xivo-utils': None,
-    'xivo-ws': None,
+    'xivo-amid': ('', 'xivo_ami', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-agent': ('xivo-agent', 'xivo_agent', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-agid': ('xivo-agid', 'xivo_agid', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-bus': ('xivo-bus', 'xivo_bus', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-call-logs': ('xivo-call-logs', 'xivo_call_logs', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-config': ('xivo-config/dialplan/asterisk', None, '/usr/share/xivo-config/dialplan/'),
+    'xivo-confgen': ('xivo-confgen', 'xivo_confgen', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-ctid': ('xivo-ctid', 'xivo_cti', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-dao': ('xivo-dao', 'xivo_dao', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-dird': ('xivo-dird', 'xivo_dird', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-lib-python': ('xivo-lib-python', 'xivo', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-provisioning': ('xivo-provisioning/src', 'provd', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-restapi': ('xivo-restapi', 'xivo_restapi', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-stat': ('xivo-stat', 'xivo_stat', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-sysconfd': ('xivo-sysconfd', 'xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-web-interface': ('xivo-web-interface/src', None, '/usr/share/xivo-web-interface'),
+    'xivo-upgrade': ('xivo-upgrade', None, None),
+    'xivo-doc': ('source', None, None),
+    'xivo': ('', None, None),
+    'xivo-acceptance': ('', None, None),
+    'create_archive_file': ('', None, None),
+    'asterisk11': ('', None, None),
+    'debian-installer': ('', None, None),
+    'pylinphonelib': ('', None, None),
+    'xivo-acceptance': ('', None, None),
+    'xivo-backup': ('', None, None),
+    'xivo-build-tools': ('', None, None),
+    'xivo-client-qt': ('', None, None),
+    'xivo-experimental': ('', None, None),
+    'xivo-fetchfw': ('', None, None),
+    'xivo-install-cd': ('', None, None),
+    'xivo-lib-js': ('', None, None),
+    'xivo-libsccp': ('', None, None),
+    'xivo-loadtest': ('', None, None),
+    'xivo-manage-db': ('', None, None),
+    'xivo-monitoring': ('', None, None),
+    'xivo-presentations': ('', None, None),
+    'xivo-provd-plugins': ('', None, None),
+    'xivo-sounds': ('', None, None),
+    'xivo-tools': ('', None, None),
+    'xivo-utils': ('', None, None),
+    'xivo-ws': ('', None, None),
 }
 
 logger = logging.getLogger(__name__)
@@ -138,11 +140,11 @@ def is_handled_repo(repo_name):
 # code coverage
 #
 def check_coverage(repositories):
-    cd('/tmp')
+    sh.cd('/tmp')
     for repo_name in repositories:
-        repo_path = _local_path(repo_name)
-        logger.debug("%s : %s" % (repo_name, repo_path))
-        #nosetests2('--with-coverage', '--cover-package=xivo_ami', repo_path)
+        path = _get_local_path(repo_name)
+        pymodule = _get_pymodule(repo_name)
+        print(sh.nosetests2("--with-coverage", "--cover-package", pymodule, path, _err_to_out=True, _cwd='/tmp'))
 
 
 # vm management
@@ -218,17 +220,26 @@ def print_mantra():
 def _rsync_repository(remote_host, repo_name):
     if _repo_is_syncable(repo_name):
         remote_uri = _remote_uri(remote_host, repo_name)
-        cmd = "%s %s %s" % (base_command, _local_path(repo_name), remote_uri)
+        cmd = "%s %s %s" % (base_command, _get_local_path(repo_name), remote_uri)
         logger.debug('about to execute rsync command : %s', cmd)
         subprocess.call(shlex.split(cmd))
 
 
 def _repo_is_syncable(name):
-    return REPOS[name]
+    return REPOS[name][2]
 
 
-def _local_path(name):
-    return '%s/%s' % (_repo_path(name), REPOS[name][0])
+def _get_local_path(name):
+    path = _repo_path(name)
+    if REPOS[name][0]:
+        path = "%s/%s" % (path, REPOS[name][0])
+    if REPOS[name][1]:
+        path = "%s/%s" % (path, REPOS[name][1])
+    return path
+
+
+def _get_pymodule(name):
+    return REPOS[name][1]
 
 
 def _repo_path(name):
@@ -236,9 +247,9 @@ def _repo_path(name):
 
 
 def _remote_uri(remote_host, repo_name):
-    remote_path = REPOS[repo_name][1]
+    remote_path = REPOS[repo_name][2]
     if remote_path:
-        return '%s:%s' % (remote_host, REPOS[repo_name][1])
+        return '%s:%s' % (remote_host, remote_path)
     else:
         return None
 
