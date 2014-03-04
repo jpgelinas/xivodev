@@ -282,14 +282,14 @@ if __name__ == "__main__":
     init_logging(args)
     print("")  # enforced newline
 
-    if args.coverage:
-        check_coverage(args.repos)
-
     if args.list:
         list_repositories_with_branch(args.repos)
 
     if args.fetch:
         fetch_repositories(args.repos)
+
+    if args.coverage:
+        check_coverage(args.repos)
 
     if args.pull:
         pull_repositories(args.repos)
