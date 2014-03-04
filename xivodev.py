@@ -77,7 +77,6 @@ REPOS = {
 }
 
 logger = logging.getLogger(__name__)
-base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
 xivo_src = '/home/jp/src/xivo'
 
 
@@ -94,12 +93,53 @@ class bcolors:
     ENDC = '\033[0m'
 
 
-def fetch_repositories(requested_repositories):
-    for repo_name in requested_repositories:
-        cmd = 'git fetch -p'
-        ret = _exec_git_command(cmd, repo_name)
-        if ret:
-            print("%s" % ret)
+def parse_args():
+    parser = argparse.ArgumentParser('XiVO dev toolkit')
+    parser.add_argument("-c", "--coverage", help="check code coverage",
+                        action="store_true")
+    parser.add_argument("-d", "--dry", help="dry run - displays but do not execute commands (when applicable)",
+                        action="store_true")
+    parser.add_argument("-f", "--fetch", help="git fetch repositories",
+                        action="store_true")
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        action="store_true")
+    parser.add_argument("-t", "--tags", help="update CTAGS",
+                        action="store_true")
+    parser.add_argument("-p", "--pull", help="git pull repositories",
+                        action="store_true")
+    parser.add_argument("-l", "--list", help="list all repositories and their current branch",
+                        action="store_true")
+    parser.add_argument("-s", "--sync", help='sync repos on given IP or hostname')
+    parser.add_argument("-vl", "--vmlist", help='list virtualbox vms',
+                        action="store_true")
+    parser.add_argument("-v1", "--vmstart", help='start virtualbox vm with given name')
+    parser.add_argument("-v0", "--vmstop", help=' stop virtualbox vm with given name')
+    parser.add_argument("-vs", "--vmsnapshot", help=' snapshot virtualbox vm with given name',
+                        nargs=2, metavar=('name', 'description'))
+    parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
+                        nargs='*', type=is_handled_repo, default=[name for name in REPOS.iterkeys()])
+
+    return parser.parse_args()
+
+
+def is_handled_repo(repo_name):
+    if repo_name not in REPOS.iterkeys():
+        msg = '%s is not a supported repository name' % repo_name
+        raise argparse.ArgumentTypeError(msg)
+    return repo_name
+
+
+def init_logging(args):
+    level = logging.DEBUG if args.verbose else logging.INFO
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(asctime)s (%(levelname)s): %(message)s'))
+    root_logger.addHandler(handler)
+
+
+def print_mantra():
+    print ("\n" + bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC)
 
 
 def list_repositories_with_branch(requested_repositories):
@@ -109,6 +149,14 @@ def list_repositories_with_branch(requested_repositories):
         if branch != 'master':
             branch = format_non_master.format(branch=branch)
         print("%s : %s" % (name, branch))
+
+
+def fetch_repositories(requested_repositories):
+    for repo_name in requested_repositories:
+        cmd = 'git fetch -p'
+        ret = _exec_git_command(cmd, repo_name)
+        if ret:
+            print("%s" % ret)
 
 
 def rsync_repositories(remote_host, requested_repositories):
@@ -129,18 +177,10 @@ def pull_repositories(repositories):
         logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
 
 
-def is_handled_repo(repo_name):
-    if repo_name not in REPOS.iterkeys():
-        msg = '%s is not a supported repository name' % repo_name
-        raise argparse.ArgumentTypeError(msg)
-    return repo_name
-
-
 #
 # code coverage
 #
 def check_coverage(repositories):
-    sh.cd('/tmp')
     for repo_name in repositories:
         path = _get_local_path(repo_name)
         pymodule = _get_pymodule(repo_name)
@@ -177,50 +217,9 @@ def snapshot_vm(name, description):
     logger.info("snapshot vm %s with description %s", name, description)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser('XiVO dev toolkit')
-    parser.add_argument("-c", "--coverage", help="check code coverage",
-                        action="store_true")
-    parser.add_argument("-d", "--dry", help="dry run - displays but do not execute commands (when applicable)",
-                        action="store_true")
-    parser.add_argument("-f", "--fetch", help="git fetch repositories",
-                        action="store_true")
-    parser.add_argument("-v", "--verbose", help="increase output verbosity",
-                        action="store_true")
-    parser.add_argument("-t", "--tags", help="update CTAGS",
-                        action="store_true")
-    parser.add_argument("-p", "--pull", help="git pull repositories",
-                        action="store_true")
-    parser.add_argument("-l", "--list", help="list all repositories and their current branch",
-                        action="store_true")
-    parser.add_argument("-s", "--sync", help='sync repos on given IP or hostname')
-    parser.add_argument("-vl", "--vmlist", help='list virtualbox vms',
-                        action="store_true")
-    parser.add_argument("-v1", "--vmstart", help='start virtualbox vm with given name')
-    parser.add_argument("-v0", "--vmstop", help=' stop virtualbox vm with given name')
-    parser.add_argument("-vs", "--vmsnapshot", help=' snapshot virtualbox vm with given name',
-                        nargs=2, metavar=('name', 'description'))
-    parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
-                        nargs='*', type=is_handled_repo, default=[name for name in REPOS.iterkeys()])
-
-    return parser.parse_args()
-
-
-def init_logging(args):
-    level = logging.DEBUG if args.verbose else logging.INFO
-    root_logger = logging.getLogger()
-    root_logger.setLevel(level)
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter('%(asctime)s (%(levelname)s): %(message)s'))
-    root_logger.addHandler(handler)
-
-
-def print_mantra():
-    print ("\n" + bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC)
-
-
 def _rsync_repository(remote_host, repo_name):
     if _repo_is_syncable(repo_name):
+        base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
         remote_uri = _remote_uri(remote_host, repo_name)
         cmd = "%s %s %s" % (base_command, _get_local_path(repo_name), remote_uri)
         logger.debug('about to execute rsync command : %s', cmd)
