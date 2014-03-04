@@ -181,6 +181,8 @@ def parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
     parser.add_argument("-c", "--coverage", help="check code coverage",
                         action="store_true")
+    parser.add_argument("-d", "--dry", help="dry run - displays but do not execute commands (when applicable)",
+                        action="store_true")
     parser.add_argument("-f", "--fetch", help="git fetch repositories",
                         action="store_true")
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
@@ -222,7 +224,8 @@ def _rsync_repository(remote_host, repo_name):
         remote_uri = _remote_uri(remote_host, repo_name)
         cmd = "%s %s %s" % (base_command, _get_local_path(repo_name), remote_uri)
         logger.debug('about to execute rsync command : %s', cmd)
-        subprocess.call(shlex.split(cmd))
+        if not args.dry:
+            subprocess.call(shlex.split(cmd))
 
 
 def _repo_is_syncable(name):
