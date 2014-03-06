@@ -20,6 +20,13 @@ OPTIONS:
    -v0     Stop given Virtualbox VMs
    -v      Verbose
    -d      Dry run mode : echoes commands without executing
+
+
+ToDo:
+    * Integrate build client
+    * Integrate build doc
+    * Integrate launch client (xclient)
+    * Integrate listing of acceptance tests (lletuce)
 """
 
 import argparse
