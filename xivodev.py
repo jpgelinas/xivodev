@@ -54,7 +54,7 @@ REPOS = {
     'xivo-restapi': ('xivo-restapi', 'xivo_restapi', '/usr/lib/python2.7/dist-packages/'),
     'xivo-stat': ('xivo-stat', 'xivo_stat', '/usr/lib/python2.7/dist-packages/'),
     'xivo-sysconfd': ('xivo-sysconfd', 'xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-web-interface': ('xivo-web-interface/src', None, '/usr/share/xivo-web-interface'),
+    'xivo-web-interface': ('xivo-web-interface/src/', None, '/usr/share/xivo-web-interface/'),
     'xivo-upgrade': ('xivo-upgrade', None, None),
     'xivo-doc': ('source', None, None),
     'xivo': ('', None, None),
