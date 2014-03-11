@@ -102,6 +102,8 @@ class bcolors:
 
 def parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
+    parser.add_argument("-bc", "--buildclient", help="rebuild XiVO client from sources",
+                        action="store_true")
     parser.add_argument("-c", "--coverage", help="check code coverage",
                         action="store_true")
     parser.add_argument("-d", "--dry", help="dry run - displays but do not execute commands (when applicable)",
@@ -222,6 +224,17 @@ def snapshot_vm(name, description):
     logger.info("snapshot vm %s with description %s", name, description)
 
 
+def build_client():
+        repo_dir = _repo_path('xivo-client-qt')
+        print('running qmake...')
+        sh.Command('qmake-qt4')('QMAKE_CXX=colorgcc', _cwd=repo_dir)
+        print('running make...')
+        print(sh.make('FUNCTESTS=yes', 'DEBUG=yes', _cwd=repo_dir))
+        print('make distclean...')
+        sh.make.distclean(_cwd=repo_dir)
+        print('%s' % repo_dir)
+
+
 def _rsync_repository(remote_host, repo_name):
     if _repo_is_syncable(repo_name):
         base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
@@ -319,5 +332,8 @@ if __name__ == "__main__":
 
     if args.vmstart:
         start_vm(args.vmstart)
+
+    if args.buildclient:
+        build_client()
 
     print_mantra()
