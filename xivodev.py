@@ -206,7 +206,7 @@ def list_vms():
 
 
 def start_vm(name):
-    cmd = 'sh -c "nohup VBoxHeadless -s {vm_name} -v on &"'.format(vm_name=name)
+    cmd = 'sh -c "nohup VBoxHeadless -s {vm_name} -v on > /dev/null &"'.format(vm_name=name)
     subprocess.call(shlex.split(cmd))
     logger.info("started vm %s", name)
 
