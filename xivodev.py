@@ -103,6 +103,8 @@ def parse_args():
     parser = argparse.ArgumentParser('XiVO dev toolkit')
     parser.add_argument("-bc", "--buildclient", help="rebuild XiVO client from sources",
                         action="store_true")
+    parser.add_argument("-bd", "--builddoc", help="rebuild XiVO doc from sources",
+                        action="store_true")
     parser.add_argument("-c", "--coverage", help="check code coverage",
                         action="store_true")
     parser.add_argument("-d", "--dry", help="dry run - displays but do not execute commands (when applicable)",
@@ -234,6 +236,10 @@ def build_client():
         print('%s' % repo_dir)
 
 
+def build_doc():
+    pass
+
+
 def _rsync_repository(remote_host, repo_name):
     if _repo_is_syncable(repo_name):
         base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
@@ -334,5 +340,8 @@ if __name__ == "__main__":
 
     if args.buildclient:
         build_client()
+
+    if args.builddoc:
+        build_doc()
 
     print_mantra()
