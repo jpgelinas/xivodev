@@ -301,9 +301,6 @@ if __name__ == "__main__":
     init_logging(args)
     print("")  # enforced newline
 
-    if args.list:
-        list_repositories_with_branch(args.repos)
-
     if args.fetch:
         fetch_repositories(args.repos)
 
@@ -337,5 +334,8 @@ if __name__ == "__main__":
 
     if args.builddoc:
         build_doc()
+
+    if args.list:
+        list_repositories_with_branch(args.repos)
 
     print_mantra()
