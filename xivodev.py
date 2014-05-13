@@ -284,7 +284,7 @@ def _pull_repository_if_on_master(repo_name):
 
 
 def _get_current_branch(repo):
-    cmd = 'git rev-parse --abbrev-ref HEAD'
+    cmd = 'git name-rev --name-only HEAD'
     return _exec_git_command(cmd, repo).strip()
 
 
