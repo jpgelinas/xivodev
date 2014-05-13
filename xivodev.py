@@ -7,6 +7,7 @@ usage: $0 options
 This script git pulls all repos in directory with a few bells and whistles.
 
 OPTIONS:
+   -b      Find branches containing given query in branch name
    -c      Check Code Coverage
    -f      Git fetch repos
    -h      Show this message
@@ -114,6 +115,7 @@ def parse_args():
     parser.add_argument("-l", "--list", help="list all repositories and their current branch",
                         action="store_true")
     parser.add_argument("-s", "--sync", help='sync repos on given IP or hostname')
+    parser.add_argument("-b", "--findbranches", help='find branches names for given query')
     parser.add_argument("-vl", "--vmlist", help='list virtualbox vms',
                         action="store_true")
     parser.add_argument("-v1", "--vmstart", help='start virtualbox vm with given name')
@@ -153,6 +155,13 @@ def list_repositories_with_branch(requested_repositories):
         if branch != 'master':
             branch = format_non_master.format(branch=branch)
         print("%s : %s" % (name, branch))
+
+
+def find_branches(requested_repositories, query):
+    for repo in requested_repositories:
+        branches = _find_matching_branches(repo, query)
+        if branches:
+            print("%s : %s" % (repo, branches))
 
 
 def fetch_repositories(requested_repositories):
@@ -288,6 +297,12 @@ def _get_current_branch(repo):
     return _exec_git_command(cmd, repo).strip()
 
 
+def _find_matching_branches(repo, query):
+    repo_dir = _repo_path(repo)
+    branches = sh.git('br', '-a', _cwd=repo_dir)
+    return str(sh.ag(branches, query, _ok_code=(0, 1))).strip()
+
+
 def _exec_git_command(cmd, repo):
     logger.debug('%s on %s', cmd, repo)
     cmd = shlex.split(cmd)
@@ -335,6 +350,9 @@ if __name__ == "__main__":
 
     if args.builddoc:
         build_doc()
+
+    if args.findbranches:
+        find_branches(args.repos, args.findbranches)
 
     if args.list:
         list_repositories_with_branch(args.repos)
