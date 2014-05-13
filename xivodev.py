@@ -220,11 +220,12 @@ def snapshot_vm(name, description):
 
 
 def build_client():
+        sh.make('distclean')
         repo_dir = _repo_path('xivo-client-qt')
         print('running qmake...')
-        sh.Command('qmake-qt4')('QMAKE_CXX=colorgcc', _cwd=repo_dir)
+        sh.Command('qmake')('QMAKE_CXX=colorgcc', _cwd=repo_dir)
         print('running make...')
-        print(sh.make('FUNCTESTS=yes', 'DEBUG=yes', _cwd=repo_dir))
+        print(sh.make('-j=4', 'FUNCTESTS=yes', 'DEBUG=yes', _cwd=repo_dir))
         print('make distclean...')
         sh.make.distclean(_cwd=repo_dir)
         print('%s' % repo_dir)
