@@ -234,8 +234,7 @@ def build_client():
         print('running qmake...')
         sh.Command('qmake')('QMAKE_CXX=colorgcc', _cwd=repo_dir)
         print('running make...')
-        print(sh.make('-j4', 'FUNCTESTS=yes', 'DEBUG=yes', _cwd=repo_dir))
-        print('%s' % repo_dir)
+        sh.make('-j4', 'FUNCTESTS=yes', 'DEBUG=yes', _cwd=repo_dir)
 
 
 def build_doc():
