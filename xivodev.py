@@ -67,7 +67,7 @@ REPOS = {
     'xivo-lib-js': ('', None, None),
     'xivo-libsccp': ('', None, None),
     'xivo-loadtest': ('', None, None),
-    'xivo-manage-db': ('', None, None),
+    'xivo-manage-db': ('alembic', None, '/usr/share/xivo-manage-db/'),
     'xivo-monitoring': ('', None, None),
     'xivo-presentations': ('', None, None),
     'xivo-provd-plugins': ('', None, None),
