@@ -7,11 +7,13 @@ usage: $0 options
 This script git pulls all repos in directory with a few bells and whistles.
 
 OPTIONS:
-   -b      Find branches containing given query in branch name
+   -b      Batch execute git command on repos
    -c      Check Code Coverage
    -f      Git fetch repos
+   -g      Grep branches containing given query in branch name
    -h      Show this message
    -l      List repositories and their current branch
+   -ll     List REPOS array
    -s      Rsync repositories on given xivo ip|hostname
    -p      git pull repositories
    -r      Concerned Repositories. By default, options affect all managed repositories. specifiying repos will limit the scope on wich options operate.
@@ -114,8 +116,11 @@ def parse_args():
                         action="store_true")
     parser.add_argument("-l", "--list", help="list all repositories and their current branch",
                         action="store_true")
+    parser.add_argument("-ll", "--longlist", help="list all repositories with additionnal infos",
+                        action="store_true")
     parser.add_argument("-s", "--sync", help='sync repos on given IP or hostname')
-    parser.add_argument("-b", "--findbranches", help='find branches names for given query')
+    parser.add_argument("-b", "--batch", help='batch execute git command on given repos')
+    parser.add_argument("-g", "--grepbranches", help='find branches names for given query')
     parser.add_argument("-vl", "--vmlist", help='list virtualbox vms',
                         action="store_true")
     parser.add_argument("-v1", "--vmstart", help='start virtualbox vm with given name')
@@ -157,7 +162,13 @@ def list_repositories_with_branch(requested_repositories):
         print("%s : %s" % (name, branch))
 
 
-def find_branches(requested_repositories, query):
+def list_repositories_with_details(requested_repositories):
+    for name in requested_repositories:
+        path = REPOS[name][2]
+        print("%s : %s" % (name, path))
+
+
+def grep_branches(requested_repositories, query):
     for repo in requested_repositories:
         branches = _find_matching_branches(repo, query)
         if branches:
@@ -176,6 +187,14 @@ def rsync_repositories(remote_host, requested_repositories):
     logger.debug('host: %s | requested repos : %s', remote_host, requested_repositories)
     for repo_name in requested_repositories:
         _rsync_repository(remote_host, repo_name)
+
+
+def batch_git_repositories(git_command, requested_repositories):
+    logger.debug('git command: %s | requested repos : %s', git_command, requested_repositories)
+    for repo_name in requested_repositories:
+        ret = _exec_git_command('git ' + git_command, repo_name)
+        if ret:
+            print("%s" % ret)
 
 
 def update_ctags():
@@ -329,6 +348,9 @@ if __name__ == "__main__":
     if args.sync:
         rsync_repositories(args.sync, args.repos)
 
+    if args.batch:
+        batch_git_repositories(args.batch, args.repos)
+
     if args.vmlist:
         list_vms()
 
@@ -348,10 +370,13 @@ if __name__ == "__main__":
     if args.builddoc:
         build_doc()
 
-    if args.findbranches:
-        find_branches(args.repos, args.findbranches)
+    if args.grepbranches:
+        grep_branches(args.repos, args.grepbranches)
 
     if args.list:
         list_repositories_with_branch(args.repos)
+
+    if args.longlist:
+        list_repositories_with_details(args.repos)
 
     print_mantra()
