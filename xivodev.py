@@ -27,9 +27,9 @@ OPTIONS:
 
 import argparse
 import logging
+import sh
 import shlex
 import subprocess
-import sh
 
 
 SOURCE_DIRECTORY = "/home/jp/src/xivo"
@@ -105,6 +105,8 @@ def parse_args():
     parser.add_argument("-c", "--coverage", help="check code coverage",
                         action="store_true")
     parser.add_argument("-d", "--dry", help="dry run - displays but do not execute commands (when applicable)",
+                        action="store_true")
+    parser.add_argument("-D", "--deletemerged", help="Delete branch already merged into masters",
                         action="store_true")
     parser.add_argument("-f", "--fetch", help="git fetch repositories",
                         action="store_true")
@@ -328,6 +330,38 @@ def _exec_git_command(cmd, repo):
     return result[0].strip()
 
 
+def delete_merged_branches(repositories):
+    dry_run = args.dry
+    if dry_run:
+        print '*****************************************************************'
+        print 'Deleting branches already merged into master'
+        print 'Will not actually delete anything yet.'
+        print 'Drop the -d (--dry) argument to confirm'
+        print '*****************************************************************'
+        print ''
+
+    for repository in repositories:
+        # logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
+        for branch in _get_merged_branches(repository):
+            if dry_run:
+                print ("%s : About to delete branch %s" % (repository, branch))
+            else:
+                print _delete_branch(repository, branch)
+
+
+def _get_merged_branches(repository):
+    ''' a list of merged branches, not couting the current branch or master '''
+    cmd = 'git branch --merged origin/master'
+    raw_results = _exec_git_command(cmd, repository)
+    return [b.strip() for b in raw_results.split('\n')
+            if b.strip() and not b.startswith('*') and b.strip() != 'master']
+
+
+def _delete_branch(repository, branch):
+    cmd = 'git branch -D %s' % branch
+    return _exec_git_command(cmd, repository)
+
+
 if __name__ == "__main__":
     args = parse_args()
     init_logging(args)
@@ -378,5 +412,8 @@ if __name__ == "__main__":
 
     if args.longlist:
         list_repositories_with_details(args.repos)
+
+    if args.deletemerged:
+        delete_merged_branches(args.repos)
 
     print_mantra()
