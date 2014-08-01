@@ -28,8 +28,6 @@ OPTIONS:
 import argparse
 import logging
 import sh
-import shlex
-import subprocess
 from xivo_dev.repositories import REPOS, SOURCE_DIRECTORY
 
 
@@ -133,7 +131,7 @@ def grep_branches(requested_repositories, query):
 
 def fetch_repositories(requested_repositories):
     for repo_name in requested_repositories:
-        cmd = 'git fetch -p'
+        cmd = sh.git.bake('fetch', '-p')
         ret = _exec_git_command(cmd, repo_name)
         if ret:
             print("%s" % ret)
@@ -148,7 +146,7 @@ def rsync_repositories(remote_host, requested_repositories, dry_run):
 def batch_git_repositories(git_command, requested_repositories):
     logger.debug('git command: %s | requested repos : %s', git_command, requested_repositories)
     for repo_name in requested_repositories:
-        ret = _exec_git_command('git ' + git_command, repo_name)
+        ret = _exec_git_command(git_command, repo_name)
         if ret:
             print("%s" % ret)
 
@@ -186,20 +184,17 @@ def list_vms():
 
 
 def start_vm(name):
-    cmd = 'sh -c "nohup VBoxHeadless -s {vm_name} -v on > /dev/null &"'.format(vm_name=name)
-    subprocess.call(shlex.split(cmd))
+    sh.VBoxHeadless('-s', name, '-v', 'on', _bg=True)
     logger.info("started vm %s", name)
 
 
 def kill_vm(name):
-    cmd = 'VBoxManage contolvm {vm_name} poweroff'.format(vm_name=name)
-    subprocess.call(shlex.split(cmd))
+    sh.VBoxManage('controlvm', name, 'poweroff')
     logger.info("stopped vm %s", name)
 
 
 def snapshot_vm(name, description):
-    cmd = 'VBoxManage snapshot {vm_name} take {description}'.format(vm_name=name, description=description)
-    subprocess.call(shlex.split(cmd))
+    sh.VBoxManage('snapshot', name, 'take', description)
     logger.info("snapshot vm %s with description %s", name, description)
 
 
@@ -218,12 +213,12 @@ def build_doc():
 
 def _rsync_repository(remote_host, repo_name, dry_run):
     if _repo_is_syncable(repo_name):
-        base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
         remote_uri = _remote_uri(remote_host, repo_name)
-        cmd = "%s %s %s" % (base_command, _get_local_path(repo_name), remote_uri)
-        logger.debug('about to execute rsync command : %s', cmd)
+        local_path = _get_local_path(repo_name)
+        rsync = sh.rsync.bake("-v", "-rtlp", "--exclude", "'*.pyc'", "--exclude", "'*.swp'", "--delete")
+        logger.debug('about to execute rsync command : %s %s %s', rsync, local_path, remote_uri)
         if not dry_run:
-            subprocess.call(shlex.split(cmd))
+            rsync(local_path, remote_uri)
 
 
 def _repo_is_syncable(name):
@@ -256,7 +251,7 @@ def _remote_uri(remote_host, repo_name):
 
 
 def _pull_repository_if_on_master(repo_name):
-    cmd = 'git pull'
+    cmd = sh.git.bake('pull')
     current_branch = _get_current_branch(repo_name)
     if(current_branch == 'master'):
         return _exec_git_command(cmd, repo_name)
@@ -265,7 +260,7 @@ def _pull_repository_if_on_master(repo_name):
 
 
 def _get_current_branch(repo):
-    cmd = 'git name-rev --name-only HEAD'
+    cmd = sh.git.bake('name-rev', '--name-only', 'HEAD')
     return _exec_git_command(cmd, repo).strip()
 
 
@@ -275,13 +270,10 @@ def _find_matching_branches(repo, query):
     return str(sh.ag(branches, query, _ok_code=(0, 1))).strip()
 
 
-def _exec_git_command(cmd, repo):
-    logger.debug('%s on %s', cmd, repo)
-    cmd = shlex.split(cmd)
+def _exec_git_command(command, repo):
+    logger.debug('%s on %s', command, repo)
     repo_dir = _repo_path(repo)
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=repo_dir)
-    result = process.communicate()
-    return result[0].strip()
+    return command(_cwd=repo_dir)
 
 
 def delete_merged_branches(repositories, dry_run):
@@ -304,22 +296,18 @@ def delete_merged_branches(repositories, dry_run):
 
 def _get_merged_branches(repository):
     ''' a list of merged branches, not couting the current branch or master '''
-    cmd = 'git branch --merged origin/master'
+    cmd = sh.git.bake('branch', '--merged', 'origin/master')
     raw_results = _exec_git_command(cmd, repository)
     return [b.strip() for b in raw_results.split('\n')
             if b.strip() and not b.startswith('*') and b.strip() != 'master']
 
 
 def _delete_branch(repository, branch):
-    cmd = 'git branch -D %s' % branch
+    cmd = sh.git.bake('branch', '-D', branch)
     return _exec_git_command(cmd, repository)
 
 
-def main():
-    args = parse_args()
-    init_logging(args)
-    print("")  # enforced newline
-
+def _dispatch(args):
     if args.fetch:
         fetch_repositories(args.repos)
 
@@ -336,7 +324,8 @@ def main():
         rsync_repositories(args.sync, args.repos, args.dry)
 
     if args.batch:
-        batch_git_repositories(args.batch, args.repos)
+        git_command = sh.git.bake(args.batch.split())
+        batch_git_repositories(git_command, args.repos)
 
     if args.vmlist:
         list_vms()
@@ -369,6 +358,12 @@ def main():
     if args.deletemerged:
         delete_merged_branches(args.repos, args.dry)
 
+
+def main():
+    args = parse_args()
+    init_logging(args)
+    print("")  # enforced newline
+    _dispatch(args)
     print_mantra()
 
 
