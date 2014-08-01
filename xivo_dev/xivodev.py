@@ -107,8 +107,8 @@ def print_mantra():
     print ("\n" + bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC)
 
 
-def list_repositories_with_branch(requested_repositories):
-    for name in requested_repositories:
+def list_repositories_with_branch(repositories):
+    for name in repositories:
         format_non_master = bcolors.FAIL + "{branch}" + bcolors.ENDC
         branch = _get_current_branch(name)
         if branch != 'master':
@@ -116,36 +116,36 @@ def list_repositories_with_branch(requested_repositories):
         print("%s : %s" % (name, branch))
 
 
-def list_repositories_with_details(requested_repositories):
-    for name in requested_repositories:
+def list_repositories_with_details(repositories):
+    for name in repositories:
         path = REPOS[name][2]
         print("%s : %s" % (name, path))
 
 
-def grep_branches(requested_repositories, query):
-    for repo in requested_repositories:
+def grep_branches(repositories, query):
+    for repo in repositories:
         branches = _find_matching_branches(repo, query)
         if branches:
             print("%s : %s" % (repo, branches))
 
 
-def fetch_repositories(requested_repositories):
-    for repo_name in requested_repositories:
+def fetch_repositories(repositories):
+    for repo_name in repositories:
         cmd = sh.git.bake('fetch', '-p')
         ret = _exec_git_command(cmd, repo_name)
         if ret:
             print("%s" % ret)
 
 
-def rsync_repositories(remote_host, requested_repositories, dry_run):
-    logger.debug('host: %s | requested repos : %s', remote_host, requested_repositories)
-    for repo_name in requested_repositories:
+def rsync_repositories(remote_host, repositories, dry_run):
+    logger.debug('host: %s | requested repos : %s', remote_host, repositories)
+    for repo_name in repositories:
         _rsync_repository(remote_host, repo_name, dry_run)
 
 
-def batch_git_repositories(git_command, requested_repositories):
-    logger.debug('git command: %s | requested repos : %s', git_command, requested_repositories)
-    for repo_name in requested_repositories:
+def batch_git_repositories(git_command, repositories):
+    logger.debug('git command: %s | requested repos : %s', git_command, repositories)
+    for repo_name in repositories:
         ret = _exec_git_command(git_command, repo_name)
         if ret:
             print("%s" % ret)
