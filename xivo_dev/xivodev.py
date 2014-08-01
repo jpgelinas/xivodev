@@ -30,54 +30,8 @@ import logging
 import sh
 import shlex
 import subprocess
+from xivo_dev.repositories import REPOS, SOURCE_DIRECTORY
 
-
-SOURCE_DIRECTORY = "/home/jp/src/xivo"
-
-REPOS = {
-    'xivo-amid': ('', 'xivo_ami', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-agent': ('', 'xivo_agent', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-agid': ('', 'xivo_agid', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-bus': ('', 'xivo_bus', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-call-logs': ('', 'xivo_call_logs', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-config': ('xivo-config/dialplan/asterisk', None, '/usr/share/xivo-config/dialplan/'),
-    'xivo-confgen': ('', 'xivo_confgen', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-ctid': ('', 'xivo_cti', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-dao': ('', 'xivo_dao', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-dird': ('', 'xivo_dird', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-lib-python': ('', 'xivo', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-provisioning': ('xivo-provisioning/src', 'provd', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-restapi': ('', 'xivo_restapi', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-stat': ('', 'xivo_stat', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-sysconfd': ('', 'xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-web-interface': ('src/', None, '/usr/share/xivo-web-interface/'),
-    'xivo-upgrade': ('', None, None),
-    'xivo-doc': ('source', None, None),
-    'xivo': ('', None, None),
-    'xivo-acceptance': ('', None, None),
-    'create_archive_file': ('', None, None),
-    'asterisk11': ('', None, None),
-    'debian-installer': ('', None, None),
-    'pylinphonelib': ('', None, None),
-    'xivo-acceptance': ('', None, None),
-    'xivo-backup': ('', None, None),
-    'xivo-build-tools': ('', None, None),
-    'xivo-client-qt': ('', None, None),
-    'xivo-experimental': ('', None, None),
-    'xivo-fetchfw': ('', None, None),
-    'xivo-install-cd': ('', None, None),
-    'xivo-lib-js': ('', None, None),
-    'xivo-libsccp': ('', None, None),
-    'xivo-loadtest': ('', None, None),
-    'xivo-manage-db': ('alembic', None, '/usr/share/xivo-manage-db/'),
-    'xivo-monitoring': ('', None, None),
-    'xivo-presentations': ('', None, None),
-    'xivo-provd-plugins': ('', None, None),
-    'xivo-sounds': ('', None, None),
-    'xivo-tools': ('', None, None),
-    'xivo-utils': ('', None, None),
-    'xivo-ws': ('', None, None),
-}
 
 logger = logging.getLogger(__name__)
 xivo_src = '/home/jp/src/xivo'
