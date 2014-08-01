@@ -139,10 +139,10 @@ def fetch_repositories(requested_repositories):
             print("%s" % ret)
 
 
-def rsync_repositories(remote_host, requested_repositories):
+def rsync_repositories(remote_host, requested_repositories, dry_run):
     logger.debug('host: %s | requested repos : %s', remote_host, requested_repositories)
     for repo_name in requested_repositories:
-        _rsync_repository(remote_host, repo_name)
+        _rsync_repository(remote_host, repo_name, dry_run)
 
 
 def batch_git_repositories(git_command, requested_repositories):
@@ -216,13 +216,13 @@ def build_doc():
     pass
 
 
-def _rsync_repository(remote_host, repo_name):
+def _rsync_repository(remote_host, repo_name, dry_run):
     if _repo_is_syncable(repo_name):
         base_command = "rsync -v -rtlp --exclude '*.pyc' --exclude '*.swp' --delete"
         remote_uri = _remote_uri(remote_host, repo_name)
         cmd = "%s %s %s" % (base_command, _get_local_path(repo_name), remote_uri)
         logger.debug('about to execute rsync command : %s', cmd)
-        if not args.dry:
+        if not dry_run:
             subprocess.call(shlex.split(cmd))
 
 
@@ -284,8 +284,7 @@ def _exec_git_command(cmd, repo):
     return result[0].strip()
 
 
-def delete_merged_branches(repositories):
-    dry_run = args.dry
+def delete_merged_branches(repositories, dry_run):
     if dry_run:
         print '*****************************************************************'
         print 'Deleting branches already merged into master'
@@ -316,7 +315,7 @@ def _delete_branch(repository, branch):
     return _exec_git_command(cmd, repository)
 
 
-if __name__ == "__main__":
+def main():
     args = parse_args()
     init_logging(args)
     print("")  # enforced newline
@@ -334,7 +333,7 @@ if __name__ == "__main__":
         update_ctags()
 
     if args.sync:
-        rsync_repositories(args.sync, args.repos)
+        rsync_repositories(args.sync, args.repos, args.dry)
 
     if args.batch:
         batch_git_repositories(args.batch, args.repos)
@@ -368,6 +367,10 @@ if __name__ == "__main__":
         list_repositories_with_details(args.repos)
 
     if args.deletemerged:
-        delete_merged_branches(args.repos)
+        delete_merged_branches(args.repos, args.dry)
 
     print_mantra()
+
+
+if __name__ == "__main__":
+    main()
