@@ -111,6 +111,46 @@ def pull_repositories(repositories):
         logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
 
 
+# git helpers
+def _pull_repository_if_on_master(repo_name):
+    cmd = sh.git.bake('pull')
+    current_branch = _get_current_branch(repo_name)
+    if(current_branch == 'master'):
+        return _exec_git_command(cmd, repo_name)
+    else:
+        return 'Not on branch master (%s)' % current_branch
+
+
+def _get_current_branch(repo):
+    cmd = sh.git.bake('name-rev', '--name-only', 'HEAD')
+    return _exec_git_command(cmd, repo).strip()
+
+
+def _find_matching_branches(repo, query):
+    repo_dir = _repo_path(repo)
+    branches = sh.git('br', '-a', _cwd=repo_dir)
+    return str(sh.ag(branches, query, _ok_code=(0, 1))).strip()
+
+
+def _exec_git_command(command, repo):
+    logger.debug('%s on %s', command, repo)
+    repo_dir = _repo_path(repo)
+    return command(_cwd=repo_dir)
+
+
+def _get_merged_branches(repository):
+    ''' a list of merged branches, not couting the current branch or master '''
+    cmd = sh.git.bake('branch', '--merged', 'origin/master')
+    raw_results = _exec_git_command(cmd, repository)
+    return [b.strip() for b in raw_results.split('\n')
+            if b.strip() and not b.startswith('*') and b.strip() != 'master']
+
+
+def _delete_branch(repository, branch):
+    cmd = sh.git.bake('branch', '-D', branch)
+    return _exec_git_command(cmd, repository)
+
+
 #####################################################
 # RSYNC
 #####################################################
@@ -118,6 +158,46 @@ def rsync_repositories(remote_host, repositories, dry_run):
     logger.debug('host: %s | requested repos : %s', remote_host, repositories)
     for repo_name in repositories:
         _rsync_repository(remote_host, repo_name, dry_run)
+
+
+# repos helpers
+def _rsync_repository(remote_host, repo_name, dry_run):
+    if _repo_is_syncable(repo_name):
+        remote_uri = _remote_uri(remote_host, repo_name)
+        local_path = _get_local_path(repo_name)
+        rsync = sh.rsync.bake("-v", "-rtlp", "--exclude", "'*.pyc'", "--exclude", "'*.swp'", "--delete")
+        logger.debug('about to execute rsync command : %s %s %s', rsync, local_path, remote_uri)
+        if not dry_run:
+            rsync(local_path, remote_uri)
+
+
+def _repo_is_syncable(name):
+    return REPOS[name][2]
+
+
+def _get_local_path(name):
+    path = _repo_path(name)
+    if REPOS[name][0]:
+        path = "%s/%s" % (path, REPOS[name][0])
+    if REPOS[name][1]:
+        path = "%s/%s" % (path, REPOS[name][1])
+    return path
+
+
+def _get_pymodule(name):
+    return REPOS[name][1]
+
+
+def _repo_path(name):
+    return '%s/%s' % (SOURCE_DIRECTORY, name)
+
+
+def _remote_uri(remote_host, repo_name):
+    remote_path = REPOS[repo_name][2]
+    if remote_path:
+        return '%s:%s' % (remote_host, remote_path)
+    else:
+        return None
 
 
 #####################################################
@@ -183,86 +263,6 @@ def build_client():
 #####################################################
 def build_doc():
     pass
-
-
-# repos helpers
-def _rsync_repository(remote_host, repo_name, dry_run):
-    if _repo_is_syncable(repo_name):
-        remote_uri = _remote_uri(remote_host, repo_name)
-        local_path = _get_local_path(repo_name)
-        rsync = sh.rsync.bake("-v", "-rtlp", "--exclude", "'*.pyc'", "--exclude", "'*.swp'", "--delete")
-        logger.debug('about to execute rsync command : %s %s %s', rsync, local_path, remote_uri)
-        if not dry_run:
-            rsync(local_path, remote_uri)
-
-
-def _repo_is_syncable(name):
-    return REPOS[name][2]
-
-
-def _get_local_path(name):
-    path = _repo_path(name)
-    if REPOS[name][0]:
-        path = "%s/%s" % (path, REPOS[name][0])
-    if REPOS[name][1]:
-        path = "%s/%s" % (path, REPOS[name][1])
-    return path
-
-
-def _get_pymodule(name):
-    return REPOS[name][1]
-
-
-def _repo_path(name):
-    return '%s/%s' % (SOURCE_DIRECTORY, name)
-
-
-def _remote_uri(remote_host, repo_name):
-    remote_path = REPOS[repo_name][2]
-    if remote_path:
-        return '%s:%s' % (remote_host, remote_path)
-    else:
-        return None
-
-
-# git helpers
-def _pull_repository_if_on_master(repo_name):
-    cmd = sh.git.bake('pull')
-    current_branch = _get_current_branch(repo_name)
-    if(current_branch == 'master'):
-        return _exec_git_command(cmd, repo_name)
-    else:
-        return 'Not on branch master (%s)' % current_branch
-
-
-def _get_current_branch(repo):
-    cmd = sh.git.bake('name-rev', '--name-only', 'HEAD')
-    return _exec_git_command(cmd, repo).strip()
-
-
-def _find_matching_branches(repo, query):
-    repo_dir = _repo_path(repo)
-    branches = sh.git('br', '-a', _cwd=repo_dir)
-    return str(sh.ag(branches, query, _ok_code=(0, 1))).strip()
-
-
-def _exec_git_command(command, repo):
-    logger.debug('%s on %s', command, repo)
-    repo_dir = _repo_path(repo)
-    return command(_cwd=repo_dir)
-
-
-def _get_merged_branches(repository):
-    ''' a list of merged branches, not couting the current branch or master '''
-    cmd = sh.git.bake('branch', '--merged', 'origin/master')
-    raw_results = _exec_git_command(cmd, repository)
-    return [b.strip() for b in raw_results.split('\n')
-            if b.strip() and not b.startswith('*') and b.strip() != 'master']
-
-
-def _delete_branch(repository, branch):
-    cmd = sh.git.bake('branch', '-D', branch)
-    return _exec_git_command(cmd, repository)
 
 
 # main overhead
