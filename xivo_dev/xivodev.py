@@ -48,63 +48,48 @@ class bcolors:
     ENDC = '\033[0m'
 
 
-def parse_args():
-    parser = argparse.ArgumentParser('XiVO dev toolkit')
-    parser.add_argument("-bc", "--buildclient", help="rebuild XiVO client from sources",
-                        action="store_true")
-    parser.add_argument("-bd", "--builddoc", help="rebuild XiVO doc from sources",
-                        action="store_true")
-    parser.add_argument("-c", "--coverage", help="check code coverage",
-                        action="store_true")
-    parser.add_argument("-d", "--dry", help="dry run - displays but do not execute commands (when applicable)",
-                        action="store_true")
-    parser.add_argument("-D", "--deletemerged", help="Delete branch already merged into masters",
-                        action="store_true")
-    parser.add_argument("-f", "--fetch", help="git fetch repositories",
-                        action="store_true")
-    parser.add_argument("-v", "--verbose", help="increase output verbosity",
-                        action="store_true")
-    parser.add_argument("-t", "--tags", help="update CTAGS",
-                        action="store_true")
-    parser.add_argument("-p", "--pull", help="git pull repositories",
-                        action="store_true")
-    parser.add_argument("-l", "--list", help="list all repositories and their current branch",
-                        action="store_true")
-    parser.add_argument("-ll", "--longlist", help="list all repositories with additionnal infos",
-                        action="store_true")
-    parser.add_argument("-s", "--sync", help='sync repos on given IP or hostname')
-    parser.add_argument("-b", "--batch", help='batch execute git command on given repos')
-    parser.add_argument("-g", "--grepbranches", help='find branches names for given query')
-    parser.add_argument("-vl", "--vmlist", help='list virtualbox vms',
-                        action="store_true")
-    parser.add_argument("-v1", "--vmstart", help='start virtualbox vm with given name')
-    parser.add_argument("-v0", "--vmstop", help=' stop virtualbox vm with given name')
-    parser.add_argument("-vs", "--vmsnapshot", help=' snapshot virtualbox vm with given name',
-                        nargs=2, metavar=('name', 'description'))
-    parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
-                        nargs='*', type=is_handled_repo, default=[name for name in REPOS.iterkeys()])
-
-    return parser.parse_args()
+#####################################################
+# GIT
+#####################################################
+def batch_git_repositories(git_command, repositories):
+    logger.debug('git command: %s | requested repos : %s', git_command, repositories)
+    for repo_name in repositories:
+        ret = _exec_git_command(git_command, repo_name)
+        if ret:
+            print("%s" % ret)
 
 
-def is_handled_repo(repo_name):
-    if repo_name not in REPOS.iterkeys():
-        msg = '%s is not a supported repository name' % repo_name
-        raise argparse.ArgumentTypeError(msg)
-    return repo_name
+def delete_merged_branches(repositories, dry_run):
+    if dry_run:
+        print '*****************************************************************'
+        print 'Deleting branches already merged into master'
+        print 'Will not actually delete anything yet.'
+        print 'Drop the -d (--dry) argument to confirm'
+        print '*****************************************************************'
+        print ''
+
+    for repository in repositories:
+        # logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
+        for branch in _get_merged_branches(repository):
+            if dry_run:
+                print ("%s : About to delete branch %s" % (repository, branch))
+            else:
+                print _delete_branch(repository, branch)
 
 
-def init_logging(args):
-    level = logging.DEBUG if args.verbose else logging.INFO
-    root_logger = logging.getLogger()
-    root_logger.setLevel(level)
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter('%(asctime)s (%(levelname)s): %(message)s'))
-    root_logger.addHandler(handler)
+def fetch_repositories(repositories):
+    for repo_name in repositories:
+        cmd = sh.git.bake('fetch', '-p')
+        ret = _exec_git_command(cmd, repo_name)
+        if ret:
+            print("%s" % ret)
 
 
-def print_mantra():
-    print ("\n" + bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC)
+def grep_branches(repositories, query):
+    for repo in repositories:
+        branches = _find_matching_branches(repo, query)
+        if branches:
+            print("%s : %s" % (repo, branches))
 
 
 def list_repositories_with_branch(repositories):
@@ -122,49 +107,32 @@ def list_repositories_with_details(repositories):
         print("%s : %s" % (name, path))
 
 
-def grep_branches(repositories, query):
-    for repo in repositories:
-        branches = _find_matching_branches(repo, query)
-        if branches:
-            print("%s : %s" % (repo, branches))
-
-
-def fetch_repositories(repositories):
+def pull_repositories(repositories):
     for repo_name in repositories:
-        cmd = sh.git.bake('fetch', '-p')
-        ret = _exec_git_command(cmd, repo_name)
-        if ret:
-            print("%s" % ret)
+        logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
 
 
+#####################################################
+# RSYNC
+#####################################################
 def rsync_repositories(remote_host, repositories, dry_run):
     logger.debug('host: %s | requested repos : %s', remote_host, repositories)
     for repo_name in repositories:
         _rsync_repository(remote_host, repo_name, dry_run)
 
 
-def batch_git_repositories(git_command, repositories):
-    logger.debug('git command: %s | requested repos : %s', git_command, repositories)
-    for repo_name in repositories:
-        ret = _exec_git_command(git_command, repo_name)
-        if ret:
-            print("%s" % ret)
-
-
+#####################################################
+# CTAGS
+#####################################################
 def update_ctags():
     ctag_file = "/home/jp/.mytags"
     print(sh.ctags('-R', '--exclude="*.js"', '-f', ctag_file, SOURCE_DIRECTORY))
     logger.info('Updated CTAGS %s', ctag_file)
 
 
-def pull_repositories(repositories):
-    for repo_name in repositories:
-        logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
-
-
-#
-# code coverage
-#
+#####################################################
+# nosetests2 & code coverage
+#####################################################
 def check_coverage(repositories):
     for repo_name in repositories:
         path = _get_local_path(repo_name)
@@ -172,9 +140,10 @@ def check_coverage(repositories):
         print(sh.nosetests2("--with-coverage", "--cover-package", pymodule, path, _err_to_out=True, _cwd='/tmp'))
 
 
+#####################################################
 # vm management
 # see https://nfolamp.wordpress.com/2010/06/10/running-virtualbox-guest-vms-in-headless-mode/
-#
+#####################################################
 def list_vms():
     msg_all = bcolors.FAIL + "All VMs" + bcolors.ENDC + '\n'
     result_all = sh.VBoxManage('list', 'vms')
@@ -198,6 +167,9 @@ def snapshot_vm(name, description):
     logger.info("snapshot vm %s with description %s", name, description)
 
 
+#####################################################
+# XiVO Client
+#####################################################
 def build_client():
         sh.make('distclean', _ok_code=(0, 1, 2))
         repo_dir = _repo_path('xivo-client-qt')
@@ -207,10 +179,14 @@ def build_client():
         sh.make('-j4', 'FUNCTESTS=yes', 'DEBUG=yes', _cwd=repo_dir)
 
 
+#####################################################
+# XiVO-doc
+#####################################################
 def build_doc():
     pass
 
 
+# repos helpers
 def _rsync_repository(remote_host, repo_name, dry_run):
     if _repo_is_syncable(repo_name):
         remote_uri = _remote_uri(remote_host, repo_name)
@@ -250,6 +226,7 @@ def _remote_uri(remote_host, repo_name):
         return None
 
 
+# git helpers
 def _pull_repository_if_on_master(repo_name):
     cmd = sh.git.bake('pull')
     current_branch = _get_current_branch(repo_name)
@@ -276,24 +253,6 @@ def _exec_git_command(command, repo):
     return command(_cwd=repo_dir)
 
 
-def delete_merged_branches(repositories, dry_run):
-    if dry_run:
-        print '*****************************************************************'
-        print 'Deleting branches already merged into master'
-        print 'Will not actually delete anything yet.'
-        print 'Drop the -d (--dry) argument to confirm'
-        print '*****************************************************************'
-        print ''
-
-    for repository in repositories:
-        # logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
-        for branch in _get_merged_branches(repository):
-            if dry_run:
-                print ("%s : About to delete branch %s" % (repository, branch))
-            else:
-                print _delete_branch(repository, branch)
-
-
 def _get_merged_branches(repository):
     ''' a list of merged branches, not couting the current branch or master '''
     cmd = sh.git.bake('branch', '--merged', 'origin/master')
@@ -307,7 +266,67 @@ def _delete_branch(repository, branch):
     return _exec_git_command(cmd, repository)
 
 
-def _dispatch(args):
+# main overhead
+def _is_handled_repo(repo_name):
+    if repo_name not in REPOS.iterkeys():
+        msg = '%s is not a supported repository name' % repo_name
+        raise argparse.ArgumentTypeError(msg)
+    return repo_name
+
+
+def _init_logging(args):
+    level = logging.DEBUG if args.verbose else logging.INFO
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(asctime)s (%(levelname)s): %(message)s'))
+    root_logger.addHandler(handler)
+
+
+def _print_mantra():
+    print ("\n" + bcolors.FAIL + "Ready, " + bcolors.ENDC + bcolors.WARNING + "Set, " + bcolors.ENDC + bcolors.OKGREEN + "C0D3!" + bcolors.ENDC)
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser('XiVO dev toolkit')
+    parser.add_argument("-bc", "--buildclient", help="rebuild XiVO client from sources",
+                        action="store_true")
+    parser.add_argument("-bd", "--builddoc", help="rebuild XiVO doc from sources",
+                        action="store_true")
+    parser.add_argument("-c", "--coverage", help="check code coverage",
+                        action="store_true")
+    parser.add_argument("-d", "--dry", help="dry run - displays but do not execute commands (when applicable)",
+                        action="store_true")
+    parser.add_argument("-D", "--deletemerged", help="Delete branch already merged into masters",
+                        action="store_true")
+    parser.add_argument("-f", "--fetch", help="git fetch repositories",
+                        action="store_true")
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        action="store_true")
+    parser.add_argument("-t", "--tags", help="update CTAGS",
+                        action="store_true")
+    parser.add_argument("-p", "--pull", help="git pull repositories",
+                        action="store_true")
+    parser.add_argument("-l", "--list", help="list all repositories and their current branch",
+                        action="store_true")
+    parser.add_argument("-ll", "--longlist", help="list all repositories with additionnal infos",
+                        action="store_true")
+    parser.add_argument("-s", "--sync", help='sync repos on given IP or hostname')
+    parser.add_argument("-b", "--batch", help='batch execute git command on given repos')
+    parser.add_argument("-g", "--grepbranches", help='find branches names for given query')
+    parser.add_argument("-vl", "--vmlist", help='list virtualbox vms',
+                        action="store_true")
+    parser.add_argument("-v1", "--vmstart", help='start virtualbox vm with given name')
+    parser.add_argument("-v0", "--vmstop", help=' stop virtualbox vm with given name')
+    parser.add_argument("-vs", "--vmsnapshot", help=' snapshot virtualbox vm with given name',
+                        nargs=2, metavar=('name', 'description'))
+    parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
+                        nargs='*', type=_is_handled_repo, default=[name for name in REPOS.iterkeys()])
+
+    return parser._parse_args()
+
+
+def _dispatch_args(args):
     if args.fetch:
         fetch_repositories(args.repos)
 
@@ -360,11 +379,11 @@ def _dispatch(args):
 
 
 def main():
-    args = parse_args()
-    init_logging(args)
+    args = _parse_args()
+    _init_logging(args)
     print("")  # enforced newline
-    _dispatch(args)
-    print_mantra()
+    _dispatch_args(args)
+    _print_mantra()
 
 
 if __name__ == "__main__":
