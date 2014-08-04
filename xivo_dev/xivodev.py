@@ -323,7 +323,7 @@ def _parse_args():
     parser.add_argument("-r", "--repos", help='list of repos on which to operate (default : all handled repos)',
                         nargs='*', type=_is_handled_repo, default=[name for name in REPOS.iterkeys()])
 
-    return parser._parse_args()
+    return parser.parse_args()
 
 
 def _dispatch_args(args):
