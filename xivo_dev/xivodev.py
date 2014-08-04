@@ -69,7 +69,6 @@ def delete_merged_branches(repositories, dry_run):
         print ''
 
     for repository in repositories:
-        # logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
         for branch in _get_merged_branches(repository):
             if dry_run:
                 print ("%s : About to delete branch %s" % (repository, branch))
@@ -78,8 +77,8 @@ def delete_merged_branches(repositories, dry_run):
 
 
 def fetch_repositories(repositories):
+    cmd = sh.git.bake('fetch', '-p')
     for repo_name in repositories:
-        cmd = sh.git.bake('fetch', '-p')
         ret = _exec_git_command(cmd, repo_name)
         if ret:
             print("%s" % ret)
@@ -93,8 +92,8 @@ def grep_branches(repositories, query):
 
 
 def list_repositories_with_branch(repositories):
+    format_non_master = bcolors.FAIL + "{branch}" + bcolors.ENDC
     for name in repositories:
-        format_non_master = bcolors.FAIL + "{branch}" + bcolors.ENDC
         branch = _get_current_branch(name)
         if branch != 'master':
             branch = format_non_master.format(branch=branch)
