@@ -28,6 +28,7 @@ OPTIONS:
 import argparse
 import logging
 import sh
+from concurrent.futures import ThreadPoolExecutor, wait
 from xivo_dev.repositories import REPOS, SOURCE_DIRECTORY
 
 
@@ -48,9 +49,16 @@ class bcolors:
     ENDC = '\033[0m'
 
 
+def _batch_repositories(repositories, job):
+    with ThreadPoolExecutor(max_workers=010) as executor:
+        futures = [executor.submit(job, repo) for repo in repositories]
+        wait(futures)
+
+
 #####################################################
 # GIT
 #####################################################
+# TODO : THREADIFY BATCH GIT
 def batch_git_repositories(git_command, repositories):
     logger.debug('git command: %s | requested repos : %s', git_command, repositories)
     for repo_name in repositories:
@@ -59,6 +67,7 @@ def batch_git_repositories(git_command, repositories):
             print("%s" % ret)
 
 
+# TODO : THREADIFY BATCH GIT
 def delete_merged_branches(repositories, dry_run):
     if dry_run:
         print '*****************************************************************'
@@ -76,6 +85,7 @@ def delete_merged_branches(repositories, dry_run):
                 print _delete_branch(repository, branch)
 
 
+# TODO : THREADIFY BATCH GIT
 def fetch_repositories(repositories):
     cmd = sh.git.bake('fetch', '-p')
     for repo_name in repositories:
@@ -91,6 +101,7 @@ def grep_branches(repositories, query):
             print("%s : %s" % (repo, branches))
 
 
+# TODO : THREADIFY BATCH GIT
 def list_repositories_with_branch(repositories):
     format_non_master = bcolors.FAIL + "{branch}" + bcolors.ENDC
     for name in repositories:
@@ -106,6 +117,7 @@ def list_repositories_with_details(repositories):
         print("%s : %s" % (name, path))
 
 
+# TODO : THREADIFY BATCH GIT
 def pull_repositories(repositories):
     for repo_name in repositories:
         logger.info('%s : %s', repo_name, _pull_repository_if_on_master(repo_name))
@@ -154,6 +166,7 @@ def _delete_branch(repository, branch):
 #####################################################
 # RSYNC
 #####################################################
+# TODO : THREADIFY BATCH ACTION ON REPOS
 def rsync_repositories(remote_host, repositories, dry_run):
     logger.debug('host: %s | requested repos : %s', remote_host, repositories)
     for repo_name in repositories:
@@ -253,9 +266,17 @@ def build_client():
         sh.make('distclean', _ok_code=(0, 1, 2))
         repo_dir = _repo_path('xivo-client-qt')
         print('running qmake...')
-        sh.Command('qmake')('QMAKE_CXX=colorgcc', _cwd=repo_dir)
+        # sh.Command('qmake')('QMAKE_CXX=colorgcc', _cwd=repo_dir)
+        sh.Command('qmake')(_cwd=repo_dir)
         print('running make...')
-        sh.make('-j4', 'FUNCTESTS=yes', 'DEBUG=yes', _cwd=repo_dir)
+        for line in sh.make('-j4',
+                            'FUNCTESTS=yes',
+                            'DEBUG=yes',
+                            _cwd=repo_dir,
+                            _iter=True):
+            if "ERROR" in line:
+                logger.error("Compile error : {0}".format(line))
+            print line
 
 
 #####################################################
@@ -265,7 +286,9 @@ def build_doc():
     pass
 
 
+#####################################################
 # main overhead
+#####################################################
 def _is_handled_repo(repo_name):
     if repo_name not in REPOS.iterkeys():
         msg = '%s is not a supported repository name' % repo_name
