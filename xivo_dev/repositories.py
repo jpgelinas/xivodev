@@ -17,7 +17,7 @@ REPOS = {
     'xivo-dird': ('', 'xivo_dird', '/usr/lib/python2.7/dist-packages/'),
     'xivo-lib-python': ('', 'xivo', '/usr/lib/python2.7/dist-packages/'),
     'xivo-provisioning': ('xivo-provisioning/src', 'provd', '/usr/lib/python2.7/dist-packages/'),
-    'xivo-restapi': ('', 'xivo_restapi', '/usr/lib/python2.7/dist-packages/'),
+    'xivo-confd': ('', 'xivo_confd', '/usr/lib/python2.7/dist-packages/'),
     'xivo-stat': ('', 'xivo_stat', '/usr/lib/python2.7/dist-packages/'),
     'xivo-sysconfd': ('', 'xivo_sysconf', '/usr/lib/python2.7/dist-packages/'),
     'xivo-web-interface': ('src/', None, '/usr/share/xivo-web-interface/'),
