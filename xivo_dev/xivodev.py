@@ -134,7 +134,7 @@ def _pull_repository_if_on_master(repo_name):
 
 
 def _get_current_branch(repo):
-    cmd = sh.git.bake('name-rev', '--name-only', 'HEAD')
+    cmd = sh.git.bake('rev-parse', '--abbrev-ref', 'HEAD')
     return _exec_git_command(cmd, repo).strip()
 
 
