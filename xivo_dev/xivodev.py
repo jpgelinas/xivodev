@@ -104,17 +104,17 @@ def grep_branches(repositories, query):
 # TODO : THREADIFY BATCH GIT
 def list_repositories_with_branch(repositories):
     format_non_master = bcolors.FAIL + "{branch}" + bcolors.ENDC
-    for name in repositories:
-        branch = _get_current_branch(name)
+    for repo_name in repositories:
+        branch = _get_current_branch(repo_name)
         if branch != 'master':
             branch = format_non_master.format(branch=branch)
-        print("%s : %s" % (name, branch))
+        print("%s : %s" % (repo_name, branch))
 
 
 def list_repositories_with_details(repositories):
-    for name in repositories:
-        path = REPOS[name][2]
-        print("%s : %s" % (name, path))
+    for repo_name in repositories:
+        path = REPOS[repo_name][2]
+        print("%s : %s" % (repo_name, path))
 
 
 # TODO : THREADIFY BATCH GIT
@@ -145,8 +145,8 @@ def _find_matching_branches(repo, query):
 
 
 def _exec_git_command(command, repo):
-    logger.debug('%s on %s', command, repo)
     repo_dir = _repo_path(repo)
+    logger.debug('%s on %s', command, repo_dir)
     return command(_cwd=repo_dir)
 
 
