@@ -146,13 +146,13 @@ def _find_matching_branches(repo, query):
 
 def _exec_git_command(command, repo):
     repo_dir = _repo_path(repo)
-    logger.debug('%s on %s', command, repo_dir)
+    logger.debug('"%s" on "%s"', command, repo_dir)
     return command(_cwd=repo_dir)
 
 
 def _get_merged_branches(repository):
     ''' a list of merged branches, not couting the current branch or master '''
-    cmd = sh.git.bake('branch', '--merged', 'origin/master')
+    cmd = sh.git.bake('branch', '--merged', 'origin/master', '--no-color')
     raw_results = _exec_git_command(cmd, repository)
     return [b.strip() for b in raw_results.split('\n')
             if b.strip() and not b.startswith('*') and b.strip() != 'master']
